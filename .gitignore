@@ -1,7 +1,6 @@
-*.ss~
-*.ss#*
-.#*.ss
+*.rkt~
+*.rkt#*
+.#*.rkt
 
-*.scm~
-*.scm#*
-.#*.scm
+.DS_Store
+.DS_Store?
