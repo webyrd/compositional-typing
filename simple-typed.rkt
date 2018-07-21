@@ -87,12 +87,13 @@
          (== `(if ,e1 ,e2 ,e3) expr)
          (!-o gamma e1 'bool)
          (!-o gamma e2 type)
-         (!-o gamma e3 type))]      
-      [(fresh (e1 e2 e3 t)
-         (== `(let-poly ((,e1 ,e2)) ,e3) expr)
-         (symbolo e1)
-         ;; (!-o ` e2 t) ;let rec
-         (!-o `((,e1 (poly ((,e1 (mono ,t)) . ,gamma) ,e2)) . ,gamma) e3 type))]
+         (!-o gamma e3 type))]
+      [(fresh (f e body t)
+         (== `(let-poly ((,f ,e)) ,body) expr)
+         (symbolo f)
+         ;; Don't infer the type of 'e' yet!
+         ;; Instead, add the 'e' expression to the environment for use later.
+         (!-o `((,f (poly ((,f (mono ,t)) . ,gamma) ,e)) . ,gamma) body type))]
       [(fresh (e1 e2 t)
          (== `(@ ,e1 ,e2) expr)
          (!-o gamma e1 `(-> ,t ,type))
