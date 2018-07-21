@@ -177,12 +177,12 @@
          (== `(pair ,v1 ,v2) val)
          (evalo env e1 v1)
          (evalo env e2 v2))]
-      [(fresh (e1 e2 e3 res1 res2 res3)
+      [(fresh (e1 e2 e3 v1 v2 v3)
          (== `(if ,e1 ,e2 ,e3) expr)
-         (evalo env e1 res1)
+         (evalo env e1 v1)
          (conde
-           [(== #t res1) (== res2 val) (evalo env e2 res2)]
-           [(=/= #t res2) (== res3 val) (evalo env e3 res3)]))]      
+           [(== #t v1) (== v2 val) (evalo env e2 v2)]
+           [(== #f v2) (== v3 val) (evalo env e3 v3)]))]      
       [(fresh (f z e body t)
          (== `(let-poly ((,f (lambda (,z) ,e))) ,body) expr)
          (symbolo f)
