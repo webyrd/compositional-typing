@@ -144,34 +144,34 @@
            [(== 'nil v) (== #t val)]
            [(=/= 'nil v) (== #f val)])
          (evalo env e v))]      
-      [(fresh (b e)
+      [(fresh (e b)
          (== `(car ,e) expr)
          (evalo env e `(cons ,val ,b)))]
-      [(fresh (b e)
+      [(fresh (e b)
          (== `(cdr ,e) expr)
          (evalo env e `(cons ,b ,val)))]
-      [(fresh (e res1)
+      [(fresh (e v)
          (== `(zero? ,e) expr)
          (conde
-           [(== 0 res1) (== #t val)]
-           [(=/= 0 res1) (== #f val)])
-         (evalo env e res1))]
+           [(== 0 v) (== #t val)]
+           [(=/= 0 v) (== #f val)])
+         (evalo env e v))]
       #|
       ;; No reason to include '+' until/unless we add support for addition constraints
       ;; (probably using CLP(FD) or SMT constraints).
-      [(fresh (e1 e2 res1 res2)
+      [(fresh (e1 e2 v1 v2)
           (== `(+ ,e1 ,e2) expr)
           (numbero res1)
           (numbero res2)
-          (+o res1 res2 val)
-          (evalo e1 env res1)
-          (evalo e2 env res2))]
+          (+o v1 v2 val)
+          (evalo e1 env v1)
+          (evalo e2 env v2))]
       |#
-      [(fresh (e1 e2 t res1 res2)
+      [(fresh (e1 e2 t v1 v2)
          (== `(cons ,e1 ,e2) expr)
-         (== `(cons ,res1 ,res2) val)
-         (evalo env e1 res1)
-         (evalo env e2 res2))]
+         (== `(cons ,v1 ,v2) val)
+         (evalo env e1 v1)
+         (evalo env e2 v2))]
       [(fresh (e1 e2 res1 res2)
          (== `(pair ,e1 ,e2) expr)
          (== `(pair ,res1 ,res2) val)
