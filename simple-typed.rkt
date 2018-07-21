@@ -1248,6 +1248,26 @@
                      (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
+;;; Something seems wrong!  How can '#f' be passed in as the argument to 'append'?
+;;; 'null?' expects a list, not a bool.
+(test "confusing-1"
+  (run* (q)
+    (fresh (expr)
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1)
+                                      l2
+                                      (cons (car l1)
+                                            (@ (@ append #f) l2)))))))
+             (pair append
+                   (cons (@ (@ append nil) nil)
+                         (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                               (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                     nil)))))
+          expr)
+      (!-o '() expr q)))
+  '((pair (-> (list int) (-> (list int) (list int)))
+          (list (list int)))))
 
 ;;; Something seems wrong!  How can '#f' be passed in as the argument to 'append'?
 ;;; 'null?' expects a list, not a bool.
@@ -1318,7 +1338,7 @@
             type)
         (!-o '() expr type)))
     '(((pair (-> (list int) (-> (list int) (list int)))
-             (list (list int)))       
+             (list (list int)))
        (let-poly ((append (lambda (l1)
                             (lambda (l2)
                               (if (null? l1)
