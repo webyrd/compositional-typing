@@ -138,12 +138,12 @@
       [(symbolo expr)
        (=/= 'nil expr)
        (lookup-evalo env expr val)]
-      [(fresh (res1 e)
+      [(fresh (e v)
          (== `(null? ,e) expr)
          (conde
-           [(== 'nil res1) (== #t val)]
-           [(=/= 'nil res1) (== #f val)])
-         (evalo env e res1))]      
+           [(== 'nil v) (== #t val)]
+           [(=/= 'nil v) (== #f val)])
+         (evalo env e v))]      
       [(fresh (b e)
          (== `(car ,e) expr)
          (evalo env e `(cons ,val ,b)))]
