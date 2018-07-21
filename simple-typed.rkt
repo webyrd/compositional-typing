@@ -66,14 +66,6 @@
          (== `(zero? ,e) expr)
          (== 'bool type)
          (!-o gamma e 'int))]
-      #|
-      ;; No reason to include '+' until/unless we support '+' in 'evalo'.
-      [(fresh (e1 e2)
-         (== `(+ ,e1 ,e2) expr)
-         (== 'int type)
-         (!-o gamma e1 'int)
-         (!-o gamma e2 'int))]
-     |#
       [(fresh (e1 e2 a)
          (== `(cons ,e1 ,e2) expr)
          (== `(list ,a) type)
@@ -156,17 +148,6 @@
            [(== 0 v) (== #t val)]
            [(=/= 0 v) (== #f val)])
          (evalo env e v))]
-      #|
-      ;; No reason to include '+' until/unless we add support for addition constraints
-      ;; (probably using CLP(FD) or SMT constraints).
-      [(fresh (e1 e2 v1 v2)
-          (== `(+ ,e1 ,e2) expr)
-          (numbero res1)
-          (numbero res2)
-          (+o v1 v2 val)
-          (evalo e1 env v1)
-          (evalo e2 env v2))]
-      |#
       [(fresh (e1 e2 t v1 v2)
          (== `(cons ,e1 ,e2) expr)
          (== `(cons ,v1 ,v2) val)
