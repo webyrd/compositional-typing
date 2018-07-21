@@ -28,11 +28,11 @@
       (symbolo x)
       (== `((,y ,t) . ,rest) gamma)
       (symbolo y)
-      (fresh (env e t2)
+      (fresh (env e)
         (conde
           [(== x y) 
            (conde
-             [(== t `(mono ,t2)) (== t2 type)]
+             [(== t `(mono ,type))]
              [(== t `(poly ,env ,e)) (!-o env e type)])]
           [(=/= x y)
            (lookupo rest x type)])))))
