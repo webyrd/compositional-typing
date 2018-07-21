@@ -24,11 +24,11 @@
 
 (define lookupo
   (lambda (gamma x type)
-    (fresh (y t rest)
+    (fresh (y t rest z e)
       (symbolo x)
       (== `((,y ,t) . ,rest) gamma)
       (symbolo y)
-      (fresh (env z e)
+      (fresh (env)
         (conde
           [(== x y) 
            (conde
@@ -115,7 +115,7 @@
 
 (define lookup-evalo
   (lambda (env x val)
-    (fresh (y v rest z body)
+    (fresh (y v rest z e)
       (symbolo x)
       (== `((,y ,v) . ,rest) env)
       (symbolo y)
@@ -123,9 +123,9 @@
         [(== x y)
          (conde
            [(== `(val ,val) v)]
-           [(== `(rec (lambda (,z) ,body)) v)
+           [(== `(rec (lambda (,z) ,e)) v)
             (symbolo z)
-            (== `(closure (,z) ,body ,env) val)])]
+            (== `(closure (,z) ,e ,env) val)])]
         [(=/= x y)
          (lookup-evalo rest x val)]))))
 
