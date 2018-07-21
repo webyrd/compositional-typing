@@ -413,3 +413,15 @@
                       (@ (@ append (cons 1 nil)) nil))
                    q))
   '((cons 1 nil)))
+
+(test "42"
+  (run* (q) (evalo `()
+                   `(let-poly ((append
+                                (lambda (l1)
+                                  (lambda (l2)
+                                    (if (null? l1) l2
+                                        (cons (car l1)
+                                              (@ (@ append (cdr l1)) l2)))))))
+                      (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
+                   q))
+  '((cons 1 (cons 2 (cons 3 (cons 4 (cons 5 nil)))))))
