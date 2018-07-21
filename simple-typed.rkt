@@ -85,8 +85,12 @@
          (== `(let-poly ((,f (lambda (,z) ,e))) ,body) expr)
          (symbolo f)
          (symbolo z)
-         ;; Don't infer the type of 'e' yet!
-         ;; Instead, add the 'e' expression to the environment for use later.
+
+         ;; Make sure the right-hand-side of 'f' has a type, but then forget about the type.
+         (fresh (forget-me)
+           (!-o `((,f (mono ,forget-me)) . ,gamma) `(lambda (,z) ,e) forget-me))
+         
+         ;; Add the right-hand-side of the binding (an expression) to the environment for use later.
          (!-o `((,f (poly ((,f (mono ,t)) . ,gamma)
                           (lambda (,z) ,e)))
                 . ,gamma)
@@ -1248,9 +1252,7 @@
                      (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
-;;; Something seems wrong!  How can '#f' be passed in as the argument to 'append'?
-;;; 'null?' expects a list, not a bool.
-(test "confusing-1"
+(test "null?-1"
   (run* (q)
     (fresh (expr)
       (== `(let-poly ((append (lambda (l1)
@@ -1266,8 +1268,7 @@
                                      nil)))))
           expr)
       (!-o '() expr q)))
-  '((pair (-> (list int) (-> (list int) (list int)))
-          (list (list int)))))
+  '())
 
 (test "null?-2"
   (run* (q)
@@ -1335,8 +1336,6 @@
       (!-o '() expr q)))
   '((-> _.0 int)))
 
-;;; Something seems wrong!  How can '#f' be passed in as the argument to 'append'?
-;;; 'null?' expects a list, not a bool.
 (time
   (test "append-type-synthesis-c"
     (run 1 (q)
@@ -1366,16 +1365,12 @@
                             (lambda (l2)
                               (if (null? l1)
                                   l2
-                                  (cons (car l1) (@ (@ append #f) l2)))))))
+                                  (cons (car l1) (@ (@ append nil) l2)))))))
          (cons (@ (@ append nil) nil)
                (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
                      (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
-;;; Something seems wrong!  How can '#f' be passed in as the argument to 'append'?
-;;; 'null?' expects a list, not a bool.
-;;;
-;;; Also, we are specifying that 'append' takes '(list int)'.
 (time
   (test "append-type-synthesis-with-append-c"
     (run 1 (q)
@@ -1410,7 +1405,7 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append #f) l2)))))))
+                                        (@ (@ append nil) l2)))))))
          (pair append
                (cons (@ (@ append nil) nil)
                      (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
