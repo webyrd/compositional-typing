@@ -22,7 +22,7 @@
 
 ;;; Simply-typed with definition expansion
 
-(define lookupo
+(define lookup-!-o
   (lambda (gamma x type)
     (fresh (y t rest z e gamma^)
       (symbolo x)
@@ -36,7 +36,7 @@
             (symbolo z)
             (!-o gamma^ `(lambda (,z) ,e) type)])]
         [(=/= x y)
-         (lookupo rest x type)]))))
+         (lookup-!-o rest x type)]))))
 
 (define !-o
   (lambda (gamma expr type)
@@ -49,7 +49,7 @@
          (== `(list ,a) type))]
       [(symbolo expr)
        (=/= expr 'nil)
-       (lookupo gamma expr type)]
+       (lookup-!-o gamma expr type)]
       [(fresh (e a)
          (== `(null? ,e) expr)
          (== 'bool type)
@@ -201,11 +201,11 @@
 
 
 (test "1"
-  (run* (q) (lookupo `((w (mono bool)) (z (mono int))) 'z q))
+  (run* (q) (lookup-!-o `((w (mono bool)) (z (mono int))) 'z q))
   '(int))
 
 (test "4"
-  (run* (q) (lookupo `((x (mono a))) 'x q))
+  (run* (q) (lookup-!-o `((x (mono a))) 'x q))
   '(a))
 
 (test "5"
