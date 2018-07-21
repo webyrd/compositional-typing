@@ -1303,7 +1303,7 @@
       (== `(let-poly ((f (lambda (l1)
                            (if (null? l1)
                                3
-                               4)))) 
+                               4))))
              (f #f))
           expr)
       (!-o '() expr q)))
