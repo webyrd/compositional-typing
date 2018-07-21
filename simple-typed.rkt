@@ -114,7 +114,7 @@
 
 
 (define lookup-evalo
-  (lambda (x env res)
+  (lambda (env x val)
     (fresh (y v rest z body)
       (symbolo x)
       (== `((,y ,v) . ,rest) env)
@@ -122,12 +122,12 @@
       (conde
         [(== x y)
          (conde
-           [(== `(val ,res) v)]
+           [(== `(val ,val) v)]
            [(== `(rec (lambda (,z) ,body)) v)
             (symbolo z)
-            (== `(closure (,z) ,body ,env) res)])]
+            (== `(closure (,z) ,body ,env) val)])]
         [(=/= x y)
-         (lookup-evalo x rest res)]))))
+         (lookup-evalo rest x val)]))))
 
 (define evalo
   (lambda (env expr val)
@@ -140,7 +140,7 @@
        (=/= 'nil expr)
        (fresh (res1)
          (== val res1)
-         (lookup-evalo expr env res1))]
+         (lookup-evalo env expr res1))]
       [(fresh (res1 e)
          (== `(null? ,e) expr)
          (conde
