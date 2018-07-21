@@ -1292,7 +1292,7 @@
     (fresh (expr)
       (== `(let-poly ((f (lambda (l1)
                            (null? l1)))) 
-             (f #f))
+             (@ f #f))
           expr)
       (!-o '() expr q)))
   '())
@@ -1304,7 +1304,7 @@
                            (if (null? l1)
                                3
                                4))))
-             (f #f))
+             (@ f #f))
           expr)
       (!-o '() expr q)))
   '())
@@ -1317,7 +1317,7 @@
                              (if (null? l1)
                                  3
                                  4)))))
-             (f #f))
+             (@ f #f))
           expr)
       (!-o '() expr q)))
   '())
