@@ -176,10 +176,17 @@
            (== res `(closure (,x) ,body ,gamma)))]
         )))
 
+(test "1"
+  (run* (q) (lookupo `((w (mono bool)) (z (mono int))) 'z q))
+  '(int))
 
-(run* (q) (lookupo `((w (mono bool)) (z (mono int))) 'z q))
-(run* (q) (lookupo `((w (poly `() #f)) (z (mono int))) 'w q))
-(run* (q) (lookupo `((w (poly ((x (mono bool))) x)) (z (mono int))) 'w q))
+(test "2"
+  (run* (q) (lookupo `((w (poly `() #f)) (z (mono int))) 'w q))
+  '(bool))
+
+(test "3"  
+  (run* (q) (lookupo `((w (poly ((x (mono bool))) x)) (z (mono int))) 'w q))
+  '(bool))
 
 (run* (q) (lookupo `((x (mono a))) 'x q))
 
