@@ -115,14 +115,19 @@
 
 (define lookup-evalo
   (lambda (x gamma res)
-    (fresh (y v z rest body)
+    (fresh (y v rest z body)
+      (symbolo x)
       (== `((,y ,v) . ,rest) gamma)
+      (symbolo y)
       (conde
         [(== x y)
          (conde
            [(== `(val ,res) v)]
-           [(== `(rec (lambda (,z) ,body)) v) (== `(closure (,z) ,body ,gamma) res)])]
-        [(=/= x y) (lookup-evalo x rest res)]))))
+           [(== `(rec (lambda (,z) ,body)) v)
+            (symbolo z)
+            (== `(closure (,z) ,body ,gamma) res)])]
+        [(=/= x y)
+         (lookup-evalo x rest res)]))))
 
 (define evalo
   (lambda (gamma expr res)
