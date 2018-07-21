@@ -1322,6 +1322,19 @@
       (!-o '() expr q)))
   '())
 
+(test "null?-7"
+  (run* (q)
+    (fresh (expr)
+      (== `(let-poly ((f (lambda (l1)
+                           (lambda (l2)
+                             (if (null? l1)
+                                 3
+                                 4)))))
+             (@ f (cons 1 nil)))
+          expr)
+      (!-o '() expr q)))
+  '((-> _.0 int)))
+
 ;;; Something seems wrong!  How can '#f' be passed in as the argument to 'append'?
 ;;; 'null?' expects a list, not a bool.
 (time
