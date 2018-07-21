@@ -130,34 +130,34 @@
          (lookup-evalo x rest res)]))))
 
 (define evalo
-  (lambda (gamma expr res)
+  (lambda (gamma expr val)
     (conde
-      [(== #f expr) (== res expr)]
-      [(== #t expr) (== res expr)]
-      [(numbero expr) (== res expr)]
-      [(== 'nil expr) (== res 'nil)]
+      [(== #f expr) (== val expr)]
+      [(== #t expr) (== val expr)]
+      [(numbero expr) (== val expr)]
+      [(== 'nil expr) (== val 'nil)]
       [(symbolo expr)
        (=/= expr 'nil)
        (fresh (res1)
-         (== res res1)
+         (== val res1)
          (lookup-evalo expr gamma res1))]
       [(fresh (res1 e)
          (== `(null? ,e) expr)
          (conde
-           [(== res1 'nil) (== #t res)]
-           [(=/= res1 'nil) (== #f res)])
+           [(== res1 'nil) (== #t val)]
+           [(=/= res1 'nil) (== #f val)])
          (evalo gamma e res1))]      
       [(fresh (b e)
          (== `(car ,e) expr)
-         (evalo gamma e `(cons ,res ,b)))]
+         (evalo gamma e `(cons ,val ,b)))]
       [(fresh (b e)
          (== `(cdr ,e) expr)
-         (evalo gamma e `(cons ,b ,res)))]
+         (evalo gamma e `(cons ,b ,val)))]
       [(fresh (e res1)
          (== `(zero? ,e) expr)
          (conde
-           [(== res1 0) (== res #t)]
-           [(=/= res1 0) (== res #f)])
+           [(== res1 0) (== val #t)]
+           [(=/= res1 0) (== val #f)])
          (evalo gamma e res1))]
       #|
       ;; No reason to include '+' until/unless we add support for addition constraints
@@ -166,41 +166,41 @@
           (== `(+ ,e1 ,e2) expr)
           (numbero res1)
           (numbero res2)
-          (+o res1 res2 res)
+          (+o res1 res2 val)
           (evalo e1 gamma res1)
           (evalo e2 gamma res2))]
       |#
       [(fresh (e1 e2 t res1 res2)
          (== `(cons ,e1 ,e2) expr)
-         (== res `(cons ,res1 ,res2))
+         (== val `(cons ,res1 ,res2))
          (evalo gamma e1 res1)
          (evalo gamma e2 res2))]
       [(fresh (e1 e2 res1 res2)
          (== `(pair ,e1 ,e2) expr)
-         (== `(pair ,res1 ,res2) res)
+         (== `(pair ,res1 ,res2) val)
          (evalo gamma e1 res1)
          (evalo gamma e2 res2))]
       [(fresh (e1 e2 e3 res1 res2 res3)
          (== `(if ,e1 ,e2 ,e3) expr)
          (evalo gamma e1 res1)
          (conde
-           [(== res1 #t) (== res res2) (evalo gamma e2 res2)]
-           [(=/= res2 #t) (== res res3) (evalo gamma e3 res3)]))]      
+           [(== res1 #t) (== val res2) (evalo gamma e2 res2)]
+           [(=/= res2 #t) (== val res3) (evalo gamma e3 res3)]))]      
       [(fresh (f z e body t)
          (== `(let-poly ((,f (lambda (,z) ,e))) ,body) expr)
          (symbolo f)
          (symbolo z)
-         (evalo `((,f (rec (lambda (,z) ,e))) . ,gamma) body res))]
+         (evalo `((,f (rec (lambda (,z) ,e))) . ,gamma) body val))]
       [(fresh (x body t t^)
          (== `(lambda (,x) ,body) expr)
-         (== res `(closure (,x) ,body ,gamma)))]
+         (== val `(closure (,x) ,body ,gamma)))]
       [(fresh (e1 e2 x body res1 res2 gamma2)
          (== `(@ ,e1 ,e2) expr)
          (== res1 `(closure (,x) ,body ,gamma2))
          (symbolo x)
          (evalo gamma e1 res1)
          (evalo gamma e2 res2)
-         (evalo `((,x (val ,res2)) . ,gamma2) body res))])))
+         (evalo `((,x (val ,res2)) . ,gamma2) body val))])))
 
 
 (test "1"
