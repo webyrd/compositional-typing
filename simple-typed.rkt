@@ -101,15 +101,15 @@
                 . ,gamma)
               body
               type))]
-      [(fresh (e1 e2 t)
-         (== `(@ ,e1 ,e2) expr)
-         (!-o gamma e1 `(-> ,t ,type))
-         (!-o gamma e2 t))]
       [(fresh (x e t t^)
          (== `(lambda (,x) ,e) expr)
          (symbolo x)
          (== `(-> ,t ,t^) type)
-         (!-o `((,x (mono ,t)) . ,gamma) e t^))])))
+         (!-o `((,x (mono ,t)) . ,gamma) e t^))]
+      [(fresh (e1 e2 t)
+         (== `(@ ,e1 ,e2) expr)
+         (!-o gamma e1 `(-> ,t ,type))
+         (!-o gamma e2 t))])))
 
 
 
@@ -136,34 +136,29 @@
       [(== #t expr) (== res expr)]
       [(numbero expr) (== res expr)]
       [(== 'nil expr) (== res 'nil)]
+      [(symbolo expr)
+       (=/= expr 'nil)
+       (fresh (res1)
+         (== res res1)
+         (lookup-evalo expr gamma res1))]
+      [(fresh (res1 e)
+         (== `(null? ,e) expr)
+         (conde
+           [(== res1 'nil) (== #t res)]
+           [(=/= res1 'nil) (== #f res)])
+         (evalo gamma e res1))]      
       [(fresh (b e)
          (== `(car ,e) expr)
          (evalo gamma e `(cons ,res ,b)))]
       [(fresh (b e)
          (== `(cdr ,e) expr)
          (evalo gamma e `(cons ,b ,res)))]
-      [(fresh (res1 e)
-         (== `(null? ,e) expr)
-         (conde
-           [(== res1 'nil) (== #t res)]
-           [(=/= res1 'nil) (== #f res)])
-         (evalo gamma e res1))]
-      [(symbolo expr)
-       (=/= expr 'nil)
-       (fresh (res1)
-         (== res res1)
-         (lookup-evalo expr gamma res1))]
       [(fresh (e res1)
          (== `(zero? ,e) expr)
          (conde
            [(== res1 0) (== res #t)]
            [(=/= res1 0) (== res #f)])
          (evalo gamma e res1))]
-      [(fresh (e1 e2 t res1 res2)
-         (== `(cons ,e1 ,e2) expr)
-         (== res `(cons ,res1 ,res2))
-         (evalo gamma e1 res1)
-         (evalo gamma e2 res2))]
       #|
       ;; No reason to include '+' until/unless we add support for addition constraints
       ;; (probably using CLP(FD) or SMT constraints).
@@ -175,32 +170,37 @@
           (evalo e1 gamma res1)
           (evalo e2 gamma res2))]
       |#
-      [(fresh (e1 e2 e3 res1 res2 res3)
-         (== `(if ,e1 ,e2 ,e3) expr)
+      [(fresh (e1 e2 t res1 res2)
+         (== `(cons ,e1 ,e2) expr)
+         (== res `(cons ,res1 ,res2))
          (evalo gamma e1 res1)
-         (conde
-           [(== res1 #t) (== res res2) (evalo gamma e2 res2)]
-           [(=/= res2 #t) (== res res3) (evalo gamma e3 res3)]))]
+         (evalo gamma e2 res2))]
       [(fresh (e1 e2 res1 res2)
          (== `(pair ,e1 ,e2) expr)
          (== `(pair ,res1 ,res2) res)
          (evalo gamma e1 res1)
          (evalo gamma e2 res2))]
+      [(fresh (e1 e2 e3 res1 res2 res3)
+         (== `(if ,e1 ,e2 ,e3) expr)
+         (evalo gamma e1 res1)
+         (conde
+           [(== res1 #t) (== res res2) (evalo gamma e2 res2)]
+           [(=/= res2 #t) (== res res3) (evalo gamma e3 res3)]))]      
       [(fresh (f z e body t)
          (== `(let-poly ((,f (lambda (,z) ,e))) ,body) expr)
          (symbolo f)
          (symbolo z)
          (evalo `((,f (rec (lambda (,z) ,e))) . ,gamma) body res))]
+      [(fresh (x body t t^)
+         (== `(lambda (,x) ,body) expr)
+         (== res `(closure (,x) ,body ,gamma)))]
       [(fresh (e1 e2 x body res1 res2 gamma2)
          (== `(@ ,e1 ,e2) expr)
          (== res1 `(closure (,x) ,body ,gamma2))
          (symbolo x)
          (evalo gamma e1 res1)
          (evalo gamma e2 res2)
-         (evalo `((,x (val ,res2)) . ,gamma2) body res))]
-      [(fresh (x body t t^)
-         (== `(lambda (,x) ,body) expr)
-         (== res `(closure (,x) ,body ,gamma)))])))
+         (evalo `((,x (val ,res2)) . ,gamma2) body res))])))
 
 
 (test "1"
