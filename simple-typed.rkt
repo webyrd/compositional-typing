@@ -392,29 +392,39 @@
 
 (test "40"
   (run* (q) (evalo `()
-                   `(let-poly ((append
-                                (lambda (l1)
-                                  (lambda (l2)
-                                    (if (null? l1) l2
-                                        (cons (car l1)
-                                              (@ (@ append (cdr l1)) l2)))))))
+                   `(let-poly ((append (lambda (l1)
+                                         (lambda (l2)
+                                           (if (null? l1) l2
+                                               (cons (car l1)
+                                                     (@ (@ append (cdr l1)) l2)))))))
                       (@ (@ append nil) nil))
                    q))
   '(nil))
 
 (test "41"
   (run* (q) (evalo `()
-                   `(let-poly ((append
-                                (lambda (l1)
-                                  (lambda (l2)
-                                    (if (null? l1) l2
-                                        (cons (car l1)
-                                              (@ (@ append (cdr l1)) l2)))))))
+                   `(let-poly ((append (lambda (l1)
+                                         (lambda (l2)
+                                           (if (null? l1) l2
+                                               (cons (car l1)
+                                                     (@ (@ append (cdr l1)) l2)))))))
                       (@ (@ append (cons 1 nil)) nil))
                    q))
   '((cons 1 nil)))
 
-(test "42"
+
+(test "42-type"
+  (run* (q) (!-o `()
+                 `(let-poly ((append (lambda (l1)
+                                       (lambda (l2)
+                                         (if (null? l1) l2
+                                             (cons (car l1)
+                                                   (@ (@ append (cdr l1)) l2)))))))
+                    (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
+                   q))
+  '((list int)))
+
+(test "42b-value"
   (run* (q) (evalo `()
                    `(let-poly ((append
                                 (lambda (l1)
