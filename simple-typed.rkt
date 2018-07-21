@@ -188,67 +188,97 @@
   (run* (q) (lookupo `((w (poly ((x (mono bool))) x)) (z (mono int))) 'w q))
   '(bool))
 
-(run* (q) (lookupo `((x (mono a))) 'x q))
+(test "4"
+  (run* (q) (lookupo `((x (mono a))) 'x q))
+  '(a))
 
-(run* (q) (!-o `() 3 q))
-(run* (q) (!-o `() #f q))
-(run* (q) (!-o `((x (mono bool))) `x q))
+(test "5"
+  (run* (q) (!-o `() 3 q))
+  '(int))
 
-(run* (q) (!-o `() `(cons 2 43) q))
+(test "6"
+  (run* (q) (!-o `() #f q))
+  '(bool))
 
+(test "7"
+  (run* (q) (!-o `((x (mono bool))) `x q))
+  '(bool))
 
-(run* (q) (!-o `() `(@ (lambda (x) x) 3) q))
+(test "8"
+  (run* (q) (!-o `() `(cons 2 43) q))
+  '())
 
-(run* (q) (!-o `() `(let-poly ((f (lambda (y) #f))) (cons (@ f 3) (@ f #f))) q))
+(test "9"
+  (run* (q) (!-o `() `(@ (lambda (x) x) 3) q))
+  '(int))
 
-(run* (q) (!-o `() `(let-poly ((f (lambda (y) y))) (pair (@ f 3) (@ f #f))) q))
+(test "10"
+  (run* (q) (!-o `() `(let-poly ((f (lambda (y) #f))) (cons (@ f 3) (@ f #f))) q))
+  '())
 
-(run* (q) (!-o `() `(@ (lambda (f) (pair (@ f 3) (@ f #f))) (lambda (y) y)) q))
-(run* (q) (!-o `() `(@ (lambda (f) (pair (@ f 3) (@ f 4))) (lambda (y) y)) q))
+(test "11"
+  (run* (q) (!-o `() `(let-poly ((f (lambda (y) y))) (pair (@ f 3) (@ f #f))) q))
+  '((pair int bool)))
 
+(test "12"
+  (run* (q) (!-o `() `(@ (lambda (f) (pair (@ f 3) (@ f #f))) (lambda (y) y)) q))
+  '())
 
+(test "13"
+  (run* (q) (!-o `() `(@ (lambda (f) (pair (@ f 3) (@ f 4))) (lambda (y) y)) q))
+  '((pair int int)))
 
-(run* (q) (!-o `()
+(test "14"
+  (run* (q) (!-o `()
                'nil q))
+  '((list _.0)))
 
-(run* (q) (lookupo `()
+(test "15"
+  (run* (q) (lookupo `()
                'nil q))
+  '((list _.0)))
 
-(run* (q) (!-o `()
+(test "16"
+  (run* (q) (!-o `()
                `(@ car nil) q))
+  '(_.0))
 
-
-(run* (q) (!-o `()
+(test "17"
+  (run* (q) (!-o `()
                `(let-poly ((append
                           (lambda (l1)
                             (lambda (l2)
                               (if (@ null? l1) l2
                                   (cons (@ car l1)
                                         l2)))))) append) q))
+  '((-> (list _.0) (-> (list _.0) (list _.0)))))
 
-
-(run* (q) (!-o `()
+(test "18"
+  (run* (q) (!-o `()
                `(let-poly ((append
                           (lambda (l1)
                             (lambda (l2)
                               (if (@ null? l1) l2
                                   (cons (cons (@ car l1) nil)
                                         (cons (@ cdr l1) l2))))))) append) q))
+  '((-> (list _.0) (-> (list (list _.0)) (list (list _.0))))))
 
-(run* (q) (!-o `() `(pair (cons 3 nil) (cons #f nil)) q))
+(test "19"
+  (run* (q) (!-o `() `(pair (cons 3 nil) (cons #f nil)) q))
+  '((pair (list int) (list bool))))
 
-(run* (q) (!-o `()
+(test "20"
+  (run* (q) (!-o `()
                `(let-poly ((append
                           (lambda (l1)
                             (lambda (l2)
                               (if (@ null? l1) l2
                                   (cons (@ car l1)
                                         (@ (@ append (@ cdr l1)) l2))))))) append) q))
+  '((-> (list _.0) (-> (list _.0) (list _.0)))))
 
-(printf "This place:\n")
-
-
-(run* (q) (!-o `()
+(test "21"
+  (run* (q) (!-o `()
                 `(let-poly ((append
                           (lambda (l1)
                             (lambda (l2)
@@ -260,40 +290,83 @@
                                          (if (@ null? l1) l1
                                              (@ (@ append (@ rev (@ cdr l1))) (cons (@ car l1) nil))))))
                                      rev)) q))
-      
+  '((-> (list _.0) (list _.0))))
 
+(test "22"
+  (run* (q) (!-o `() `(lambda (f) (@ f f)) q))
+  '())
 
-(run* (q) (!-o `() `(lambda (f) (@ f f)) q))
+(test "23"
+  (run* (q) (!-o `() `(lambda (y) (cons #f y)) q))
+  '((-> (list bool) (list bool))))
 
-(run* (q) (!-o `() `(lambda (y) (cons #f y)) q))
+(test "24"
+  (run* (q) (!-o `() `(let-poly ((x (lambda (y) (cons #f y)))) x) q))
+  '((-> (list bool) (list bool))))
 
-(run* (q) (!-o `() `(let-poly ((x (lambda (y) (cons #f y)))) x) q))
-(run 1 (q) (!-o `((x (mono (-> bool bool))) (z (mono bool))) `(@ x ,q) `bool))
+(test "25"
+  (run 1 (q) (!-o `((x (mono (-> bool bool))) (z (mono bool))) `(@ x ,q) `bool))
+  '(#f))
 
-(run 1 (q) (!-o `() `(lambda (x) ,q) `(-> bool bool)))
-(run* (q) (!-o `() `(lambda (x) x) q))
+(test "26"
+  (run 1 (q) (!-o `() `(lambda (x) ,q) `(-> bool bool)))
+  '(#f))
 
-(run* (q) (eval `() #f  q))
-(run* (q) (eval  `()`(cons 3 #f) q))
-(run* (q) (eval  `() `(lambda (y) (cons #f y)) q))
-(run* (q) (eval  `()`(@ (lambda (x) x) 3) q))
+(test "27"
+  (run* (q) (!-o `() `(lambda (x) x) q))
+  '((-> _.0 _.0)))
 
-(run* (q) (eval  `()`(let-poly ((x (lambda (y) #f))) (cons (@ x 3) (@ x #f))) q))
-(run* (q) (eval `() `(let-poly ((f (lambda (y) y))) (pair (@ f 3) (@ f #f))) q))
+(test "28"
+  (run* (q) (eval `() #f  q))
+  '(#f))
 
-(run* (q) (eval `() `(let-poly ((f (lambda (y) y)))
+(test "29"
+  (run* (q) (eval  `()`(cons 3 #f) q))
+  '((cons 3 #f)))
+
+(test "30"
+  (run* (q) (eval  `() `(lambda (y) (cons #f y)) q))
+  '((closure (y) (cons #f y) ())))
+
+(test "31"
+  (run* (q) (eval  `()`(@ (lambda (x) x) 3) q))
+  '(3))
+
+(test "32"
+  (run* (q) (eval  `()`(let-poly ((x (lambda (y) #f))) (cons (@ x 3) (@ x #f))) q))
+  '((cons #f #f)))
+
+(test "33"
+  (run* (q) (eval `() `(let-poly ((f (lambda (y) y))) (pair (@ f 3) (@ f #f))) q))
+  '((pair 3 #f)))
+
+(test "34"
+  (run* (q) (eval `() `(let-poly ((f (lambda (y) y)))
                                (pair (@ f 3) (@ f #f))) q))
+  '((pair 3 #f)))
 
-(run* (q) (eval `() `(@ (lambda (f) (pair (@ f 3) (@ f #f))) (lambda (y) y)) q))
-(run* (q) (eval `() `(@ (lambda (f) (pair (@ f 3) (@ f 4))) (lambda (y) y)) q))
+(test "35"
+  (run* (q) (eval `() `(@ (lambda (f) (pair (@ f 3) (@ f #f))) (lambda (y) y)) q))
+  '((pair 3 #f)))
 
-(run* (q) (eval `() `nil q))
+(test "36"
+  (run* (q) (eval `() `(@ (lambda (f) (pair (@ f 3) (@ f 4))) (lambda (y) y)) q))
+  '((pair 3 4)))
 
-(run* (q) (eval `() `(cons 5 nil) q))
+(test "37"
+  (run* (q) (eval `() `nil q))
+  '(nil))
 
-(run* (q) (eval `() `(null? nil) q))
+(test "38"
+  (run* (q) (eval `() `(cons 5 nil) q))
+  '((cons 5 nil)))
 
-(run* (q) (eval `()
+(test "39"
+  (run* (q) (eval `() `(null? nil) q))
+  '(#t))
+
+(test "40"
+  (run* (q) (eval `()
                `(let-poly ((append
                           (lambda (l1)
                             (lambda (l2)
@@ -301,8 +374,10 @@
                                   (cons (car l1)
                                         (@ (@ append (cdr l1)) l2)))))))
                           (@ (@ append nil) nil)) q))
+  '(nil))
 
-(run* (q) (eval `()
+(test "41"
+  (run* (q) (eval `()
                `(let-poly ((append
                           (lambda (l1)
                             (lambda (l2)
@@ -310,3 +385,4 @@
                                   (cons (car l1)
                                         (@ (@ append (cdr l1)) l2)))))))
                           (@ (@ append (cons 1 nil)) nil)) q))
+  '((cons 1 nil)))
