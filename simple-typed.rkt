@@ -65,11 +65,14 @@
          (== `(zero? ,e) expr)
          (== 'bool type)
          (!-o gamma e 'int))]
+      #|
+      ;; No reason to include + until/unless we include + in evaluator
       [(fresh (e1 e2)
          (== `(+ ,e1 ,e2) expr)
          (== 'int type)
          (!-o gamma e1 'int)
          (!-o gamma e2 'int))]
+     |#
       [(fresh (e1 e2 t)
          (== `(cons ,e1 ,e2) expr)
          (== `(list ,t) type)
