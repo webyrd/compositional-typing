@@ -24,23 +24,6 @@
 
 (define lookupo
   (lambda (gamma x type)
-    (conde
-      [(== x 'nil) (fresh (a)
-                     (== `(list ,a) type))]
-      [(== x 'car) (fresh (a)
-                     (== `(-> (list ,a) ,a) type))]
-      [(== x 'cdr) (fresh (a)
-                     (== `(-> (list ,a) (list ,a)) type))]
-      [(== x 'null?) (fresh (a)
-                       (== `(-> (list ,a) bool) type))]
-      [(=/= x 'nil) ;; not 'car ..
-       (=/= x 'car)
-       (=/= x 'cdr)
-       (=/= x 'null?)
-       (lookupo-non-prim gamma x type)])))
-
-(define lookupo-non-prim
-  (lambda (gamma x type)
     (fresh (y t rest)
       (symbolo x)
       (== `((,y ,t) . ,rest) gamma)
@@ -52,7 +35,7 @@
              [(== t `(poly ,env ,e)) (!-o env e type)]
              [(== t `(mono ,t2)) (== t2 type)])]
           [(=/= x y)
-           (lookupo-non-prim rest x type)])))))
+           (lookupo rest x type)])))))
 
 (define !-o
   (lambda (gamma expr type)
@@ -60,7 +43,24 @@
       [(== #f expr) (== 'bool type)]
       [(== #t expr) (== 'bool type)]
       [(numbero expr) (== 'int type)]
-      [(symbolo expr) (lookupo gamma expr type)]
+      [(== 'nil expr)
+       (fresh (a)
+         (== `(list ,a) type))]
+      [(fresh (e a)
+         (== `(car ,e) expr)
+         (== a type)
+         (!-o gamma e `(list ,a)))]
+      [(fresh (e a)
+         (== `(cdr ,e) expr)
+         (== `(list ,a) type)
+         (!-o gamma e `(list ,a)))]
+      [(fresh (e a)
+         (== `(null? ,e) expr)
+         (== 'bool type)
+         (!-o gamma e `(list ,a)))]
+      [(symbolo expr)
+       (=/= expr 'nil)
+       (lookupo gamma expr type)]
       [(fresh (e)
          (== `(zero? ,e) expr)
          (== 'bool type)
@@ -252,20 +252,16 @@
   (run* (q) (!-o `() 'nil q))
   '((list _.0)))
 
-(test "15"
-  (run* (q) (lookupo `() 'nil q))
-  '((list _.0)))
-
 (test "16"
-  (run* (q) (!-o `() `(@ car nil) q))
+  (run* (q) (!-o `() `(car nil) q))
   '(_.0))
 
 (test "17"
   (run* (q) (!-o `()
                  `(let-poly ((append (lambda (l1)
                                        (lambda (l2)
-                                         (if (@ null? l1) l2
-                                             (cons (@ car l1) l2))))))
+                                         (if (null? l1) l2
+                                             (cons (car l1) l2))))))
                     append)
                  q))
   '((-> (list _.0) (-> (list _.0) (list _.0)))))
@@ -274,9 +270,9 @@
   (run* (q) (!-o `()
                  `(let-poly ((append (lambda (l1)
                                        (lambda (l2)
-                                         (if (@ null? l1) l2
-                                             (cons (cons (@ car l1) nil)
-                                                   (cons (@ cdr l1) l2)))))))
+                                         (if (null? l1) l2
+                                             (cons (cons (car l1) nil)
+                                                   (cons (cdr l1) l2)))))))
                     append)
                  q))
   '((-> (list _.0) (-> (list (list _.0)) (list (list _.0))))))
@@ -289,9 +285,9 @@
   (run* (q) (!-o `()
                  `(let-poly ((append (lambda (l1)
                                        (lambda (l2)
-                                         (if (@ null? l1) l2
-                                             (cons (@ car l1)
-                                                   (@ (@ append (@ cdr l1)) l2)))))))
+                                         (if (null? l1) l2
+                                             (cons (car l1)
+                                                   (@ (@ append (cdr l1)) l2)))))))
                     append)
                  q))
   '((-> (list _.0) (-> (list _.0) (list _.0)))))
@@ -300,12 +296,12 @@
   (run* (q) (!-o `()
                  `(let-poly ((append (lambda (l1)
                                        (lambda (l2)
-                                         (if (@ null? l1) l2
-                                             (cons (@ car l1)
-                                                   (@ (@ append (@ cdr l1)) l2)))))))
+                                         (if (null? l1) l2
+                                             (cons (car l1)
+                                                   (@ (@ append (cdr l1)) l2)))))))
                     (let-poly ((rev (lambda (l1)
-                                      (if (@ null? l1) l1
-                                          (@ (@ append (@ rev (@ cdr l1))) (cons (@ car l1) nil))))))
+                                      (if (null? l1) l1
+                                          (@ (@ append (@ rev (cdr l1))) (cons (car l1) nil))))))
                       rev))
                  q))
   '((-> (list _.0) (list _.0))))
