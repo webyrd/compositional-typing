@@ -100,11 +100,11 @@
                 . ,gamma)
               body
               type))]
-      [(fresh (x e t t^)
-         (== `(lambda (,x) ,e) expr)
+      [(fresh (x body t t^)
+         (== `(lambda (,x) ,body) expr)
          (symbolo x)
          (== `(-> ,t ,t^) type)
-         (!-o `((,x (mono ,t)) . ,gamma) e t^))]
+         (!-o `((,x (mono ,t)) . ,gamma) body t^))]
       [(fresh (e1 e2 t)
          (== `(@ ,e1 ,e2) expr)
          (!-o gamma e1 `(-> ,t ,type))
