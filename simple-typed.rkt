@@ -24,20 +24,19 @@
 
 (define lookupo
   (lambda (gamma x type)
-    (fresh (y t rest z e)
+    (fresh (y t rest z e gamma^)
       (symbolo x)
       (== `((,y ,t) . ,rest) gamma)
       (symbolo y)
-      (fresh (env)
-        (conde
-          [(== x y) 
-           (conde
-             [(== t `(mono ,type))]
-             [(== t `(poly ,env (lambda (,z) ,e)))
-              (symbolo z)
-              (!-o env `(lambda (,z) ,e) type)])]
-          [(=/= x y)
-           (lookupo rest x type)])))))
+      (conde
+        [(== x y) 
+         (conde
+           [(== t `(mono ,type))]
+           [(== t `(poly ,gamma^ (lambda (,z) ,e)))
+            (symbolo z)
+            (!-o gamma^ `(lambda (,z) ,e) type)])]
+        [(=/= x y)
+         (lookupo rest x type)]))))
 
 (define !-o
   (lambda (gamma expr type)
