@@ -32,8 +32,8 @@
         (conde
           [(== x y) 
            (conde
-             [(== t `(poly ,env ,e)) (!-o env e type)]
-             [(== t `(mono ,t2)) (== t2 type)])]
+             [(== t `(mono ,t2)) (== t2 type)]
+             [(== t `(poly ,env ,e)) (!-o env e type)])]
           [(=/= x y)
            (lookupo rest x type)])))))
 
