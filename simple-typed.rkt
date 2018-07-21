@@ -628,7 +628,7 @@
 
 
 (time
-  (test "44-type-synthesis-a"
+  (test "append-type-synthesis-a"
     (run 1 (q)
       (fresh (expr type e)
         (== (list type expr) q)
@@ -661,7 +661,7 @@
        (=/= ((_.0 1)) ((_.0 2)) ((_.0 3)) ((_.0 4)) ((_.0 5)) ((_.0 6))) (num _.0)))))
 
 (time
-  (test "44-value-synthesis-a"
+  (test "append-value-synthesis-a"
     (run 1 (q)
       (fresh (expr val e)
         (== (list val expr) q)
@@ -702,7 +702,7 @@
                            nil))))))))
 
 (time
-  (test "44-type-and-value-synthesis-a"
+  (test "append-type-and-value-synthesis-a"
     (run 1 (q)
       (fresh (expr type val e)
         (== (list type val expr) q)
