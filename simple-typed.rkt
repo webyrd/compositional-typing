@@ -544,7 +544,7 @@
                    (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
 
-(test "43-type-including-append"
+(test "43-type-with-append"
   (run* (q)
     (fresh (expr type)
       (== (list type expr) q)
@@ -606,7 +606,7 @@
                    (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
 
-(test "43-value-including-append"
+(test "43-value-with-append"
   (run* (q)
     (fresh (expr val)
       (== (list val expr) q)
@@ -681,7 +681,7 @@
                    (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
 
-(test "43-type-and-value-including-append"
+(test "43-type-and-value-with-append"
   (run* (q)
     (fresh (expr type val)
       (== (list type val expr) q)
@@ -765,7 +765,7 @@
                    (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
 
-(test "43-type-and-value-verify-including-append"
+(test "43-type-and-value-verify-with-append"
   (run* (q)
     (fresh (expr type val)
       (== (list type val expr) q)
