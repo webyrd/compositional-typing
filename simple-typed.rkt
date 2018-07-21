@@ -82,7 +82,9 @@
          (!-o gamma e2 type)
          (!-o gamma e3 type))]
       [(fresh (f z e body t)
-         (== `(let-poly ((,f (lambda (,z) ,e))) ,body) expr)
+         (== `(let-poly ((,f (lambda (,z) ,e)))
+                ,body)
+             expr)
          (symbolo f)
          (symbolo z)
 
