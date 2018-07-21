@@ -193,6 +193,22 @@
   (run* (q) (lookup-!-o `((x (mono a))) 'x q))
   '(a))
 
+(test "let-poly-type-1"
+  (run* (q) (!-o '()
+                 '(let-poly ((f (lambda (w)
+                                  (@ w w))))
+                    5)
+                 q))
+  '())
+
+(test "let-poly-type-2"
+  (run* (q) (!-o '()
+                 '(let-poly ((f (lambda (w)
+                                  (@ w 3))))
+                    5)
+                 q))
+  '(int))
+
 (test "5"
   (run* (q) (!-o `() 3 q))
   '(int))
