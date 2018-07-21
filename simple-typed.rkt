@@ -106,7 +106,7 @@
 
 
 
-(define lookup_eval_o
+(define lookup-evalo
   (lambda (x gamma res)
     (fresh (y v z rest body)
       (== `((,y ,v) . ,rest) gamma)
@@ -115,9 +115,9 @@
          (conde
            [(== `(val ,res) v)]
            [(== `(rec (lambda (,z) ,body)) v) (== `(closure (,z) ,body ,gamma) res)])]
-        [(=/= x y) (lookup_eval_o x rest res)]))))
+        [(=/= x y) (lookup-evalo x rest res)]))))
 
-(define eval
+(define evalo
   (lambda (gamma expr res)
     (conde
       [(== #f expr) (== res expr)]
@@ -126,61 +126,61 @@
       [(== 'nil expr) (== res 'nil)]
       [(fresh (b e)
          (== `(car ,e) expr)
-         (eval gamma e `(cons ,res ,b)))]
+         (evalo gamma e `(cons ,res ,b)))]
       [(fresh (b e)
          (== `(cdr ,e) expr)
-         (eval gamma e `(cons ,b ,res)))]
+         (evalo gamma e `(cons ,b ,res)))]
       [(fresh (res1 e)
          (== `(null? ,e) expr)
          (conde
            [(== res1 'nil) (== #t res)]
            [(=/= res1 'nil) (== #f res)])
-         (eval gamma e res1))]
+         (evalo gamma e res1))]
       [(symbolo expr)
        (=/= expr 'nil)
        (fresh (res1)
          (== res res1)
-         (lookup_eval_o expr gamma res1))]
+         (lookup-evalo expr gamma res1))]
       [(fresh (e res1)
          (== `(zero? ,e) expr)
          (conde
            [(== res1 0) (== res #t)]
            [(=/= res1 0) (== res #f)])
-         (eval gamma e res1))]
+         (evalo gamma e res1))]
       [(fresh (e1 e2 t res1 res2)
          (== `(cons ,e1 ,e2) expr)
          (== res `(cons ,res1 ,res2))
-         (eval gamma e1 res1)
-         (eval gamma e2 res2))]
+         (evalo gamma e1 res1)
+         (evalo gamma e2 res2))]
       ;; [(fresh (e1 e2 res1 res2)
       ;;     (== `(+ ,e1 ,e2) expr)
-      ;;     (eval e1 gamma res1)
-      ;;     (eval e2 gamma res2)
+      ;;     (evalo e1 gamma res1)
+      ;;     (evalo e2 gamma res2)
       ;;     (numbero res1)
       ;;     (numbero res2)
       ;;     (== res (+ res1 res2)))]
       [(fresh (e1 e2 e3 res1 res2 res3)
          (== `(if ,e1 ,e2 ,e3) expr)
-         (eval gamma e1 res1)
+         (evalo gamma e1 res1)
          (conde
-           [(== res1 #t) (== res res2) (eval gamma e2 res2)]
-           [(=/= res2 #t) (== res res3) (eval gamma e3 res3)]))]
+           [(== res1 #t) (== res res2) (evalo gamma e2 res2)]
+           [(=/= res2 #t) (== res res3) (evalo gamma e3 res3)]))]
       [(fresh (e1 e2 res1 res2)
          (== `(pair ,e1 ,e2) expr)
          (== `(pair ,res1 ,res2) res)
-         (eval gamma e1 res1)
-         (eval gamma e2 res2))]
+         (evalo gamma e1 res1)
+         (evalo gamma e2 res2))]
       [(fresh (e1 e2 e3 t)
          (== `(let-poly ((,e1 ,e2)) ,e3) expr)
          (symbolo e1)
-         (eval `((,e1 (rec ,e2)) . ,gamma) e3 res))]
+         (evalo `((,e1 (rec ,e2)) . ,gamma) e3 res))]
       [(fresh (e1 e2 x body res1 res2 gamma2)
          (== `(@ ,e1 ,e2) expr)
          (== res1 `(closure (,x) ,body ,gamma2))
          (symbolo x)
-         (eval gamma e1 res1)
-         (eval gamma e2 res2)
-         (eval `((,x (val ,res2)) . ,gamma2) body res))]
+         (evalo gamma e1 res1)
+         (evalo gamma e2 res2)
+         (evalo `((,x (val ,res2)) . ,gamma2) body res))]
       [(fresh (x body t t^)
          (== `(lambda (,x) ,body) expr)
          (== res `(closure (,x) ,body ,gamma)))])))
@@ -339,90 +339,90 @@
   '((-> _.0 _.0)))
 
 (test "28"
-  (run* (q) (eval `() #f q))
+  (run* (q) (evalo `() #f q))
   '(#f))
 
 (test "29"
-  (run* (q) (eval `() `(cons 3 #f) q))
+  (run* (q) (evalo `() `(cons 3 #f) q))
   '((cons 3 #f)))
 
 (test "30"
-  (run* (q) (eval `()
-                  `(lambda (y) (cons #f y))
-                  q))
+  (run* (q) (evalo `()
+                   `(lambda (y) (cons #f y))
+                   q))
   '((closure (y) (cons #f y) ())))
 
 (test "31"
-  (run* (q) (eval `()
-                  `(@ (lambda (x) x) 3)
-                  q))
+  (run* (q) (evalo `()
+                   `(@ (lambda (x) x) 3)
+                   q))
   '(3))
 
 (test "32"
-  (run* (q) (eval `()
-                  `(let-poly ((x (lambda (y) #f)))
-                     (cons (@ x 3) (@ x #f)))
-                  q))
+  (run* (q) (evalo `()
+                   `(let-poly ((x (lambda (y) #f)))
+                      (cons (@ x 3) (@ x #f)))
+                   q))
   '((cons #f #f)))
 
 (test "33"
-  (run* (q) (eval `()
-                  `(let-poly ((f (lambda (y) y)))
-                     (pair (@ f 3) (@ f #f)))
-                  q))
+  (run* (q) (evalo `()
+                   `(let-poly ((f (lambda (y) y)))
+                      (pair (@ f 3) (@ f #f)))
+                   q))
   '((pair 3 #f)))
 
 (test "34"
-  (run* (q) (eval `()
-                  `(let-poly ((f (lambda (y) y)))
-                     (pair (@ f 3) (@ f #f)))
-                  q))
+  (run* (q) (evalo `()
+                   `(let-poly ((f (lambda (y) y)))
+                      (pair (@ f 3) (@ f #f)))
+                   q))
   '((pair 3 #f)))
 
 (test "35"
-  (run* (q) (eval `()
-                  `(@ (lambda (f) (pair (@ f 3) (@ f #f))) (lambda (y) y))
-                  q))
+  (run* (q) (evalo `()
+                   `(@ (lambda (f) (pair (@ f 3) (@ f #f))) (lambda (y) y))
+                   q))
   '((pair 3 #f)))
 
 (test "36"
-  (run* (q) (eval `()
-                  `(@ (lambda (f) (pair (@ f 3) (@ f 4))) (lambda (y) y))
-                  q))
+  (run* (q) (evalo `()
+                   `(@ (lambda (f) (pair (@ f 3) (@ f 4))) (lambda (y) y))
+                   q))
   '((pair 3 4)))
 
 (test "37"
-  (run* (q) (eval `() `nil q))
+  (run* (q) (evalo `() `nil q))
   '(nil))
 
 (test "38"
-  (run* (q) (eval `() `(cons 5 nil) q))
+  (run* (q) (evalo `() `(cons 5 nil) q))
   '((cons 5 nil)))
 
 (test "39"
-  (run* (q) (eval `() `(null? nil) q))
+  (run* (q) (evalo `() `(null? nil) q))
   '(#t))
 
 (test "40"
-  (run* (q) (eval `()
-                  `(let-poly ((append
-                               (lambda (l1)
-                                 (lambda (l2)
-                                   (if (null? l1) l2
-                                       (cons (car l1)
-                                             (@ (@ append (cdr l1)) l2)))))))
-                     (@ (@ append nil) nil))
-                  q))
+  (run* (q) (evalo `()
+                   `(let-poly ((append
+                                (lambda (l1)
+                                  (lambda (l2)
+                                    (if (null? l1) l2
+                                        (cons (car l1)
+                                              (@ (@ append (cdr l1)) l2)))))))
+                      (@ (@ append nil) nil))
+                   q))
   '(nil))
 
 (test "41"
-  (run* (q) (eval `()
-                  `(let-poly ((append
-                               (lambda (l1)
-                                 (lambda (l2)
-                                   (if (null? l1) l2
-                                       (cons (car l1)
-                                             (@ (@ append (cdr l1)) l2)))))))
-                     (@ (@ append (cons 1 nil)) nil))
-                  q))
+  (run* (q) (evalo `()
+                   `(let-poly ((append
+                                (lambda (l1)
+                                  (lambda (l2)
+                                    (if (null? l1) l2
+                                        (cons (car l1)
+                                              (@ (@ append (cdr l1)) l2)))))))
+                      (@ (@ append (cons 1 nil)) nil))
+                   q))
   '((cons 1 nil)))
