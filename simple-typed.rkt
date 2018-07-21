@@ -456,3 +456,65 @@
                                 (cons (car l1)
                                       (@ (@ append (cdr l1)) l2)))))))
        (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
+
+(test "43-type"
+  (run* (q) (!-o `()
+                 `(let-poly ((append (lambda (l1)
+                                       (lambda (l2)
+                                         (if (null? l1) l2
+                                             (cons (car l1)
+                                                   (@ (@ append (cdr l1)) l2)))))))
+                    (cons (@ (@ append nil) nil)
+                          (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                                (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                      nil))))
+                 q))
+  '((list (list int))))
+
+(test "43-value"
+  (run* (q) (evalo `()
+                   `(let-poly ((append (lambda (l1)
+                                         (lambda (l2)
+                                           (if (null? l1) l2
+                                               (cons (car l1)
+                                                     (@ (@ append (cdr l1)) l2)))))))
+                      (cons (@ (@ append nil) nil)
+                            (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                                  (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                        nil))))
+                   q))
+  '((cons nil
+          (cons (cons 1 (cons 2 nil))
+                (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                      nil)))))
+
+(test "43-type-and-value"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1) l2
+                                      (cons (car l1)
+                                            (@ (@ append (cdr l1)) l2)))))))
+             (cons (@ (@ append nil) nil)
+                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                               nil))))
+          expr)
+      (!-o '() expr type)
+      (evalo '() expr val)))
+  '(((list (list int))
+     (cons nil
+           (cons (cons 1 (cons 2 nil))
+                 (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                       nil)))
+     (let-poly ((append (lambda (l1)
+                          (lambda (l2)
+                            (if (null? l1) l2
+                                (cons (car l1)
+                                      (@ (@ append (cdr l1)) l2)))))))
+       (cons (@ (@ append nil) nil)
+             (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                   (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                         nil)))))))
