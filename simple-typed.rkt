@@ -28,12 +28,14 @@
       (symbolo x)
       (== `((,y ,t) . ,rest) gamma)
       (symbolo y)
-      (fresh (env e)
+      (fresh (env z e)
         (conde
           [(== x y) 
            (conde
              [(== t `(mono ,type))]
-             [(== t `(poly ,env ,e)) (!-o env e type)])]
+             [(== t `(poly ,env (lambda (,z) ,e)))
+              (symbolo z)
+              (!-o env `(lambda (,z) ,e) type)])]
           [(=/= x y)
            (lookupo rest x type)])))))
 
@@ -88,12 +90,17 @@
          (!-o gamma e1 'bool)
          (!-o gamma e2 type)
          (!-o gamma e3 type))]
-      [(fresh (f e body t)
-         (== `(let-poly ((,f ,e)) ,body) expr)
+      [(fresh (f z e body t)
+         (== `(let-poly ((,f (lambda (,z) ,e))) ,body) expr)
          (symbolo f)
+         (symbolo z)
          ;; Don't infer the type of 'e' yet!
          ;; Instead, add the 'e' expression to the environment for use later.
-         (!-o `((,f (poly ((,f (mono ,t)) . ,gamma) ,e)) . ,gamma) body type))]
+         (!-o `((,f (poly ((,f (mono ,t)) . ,gamma)
+                          (lambda (,z) ,e)))
+                . ,gamma)
+              body
+              type))]
       [(fresh (e1 e2 t)
          (== `(@ ,e1 ,e2) expr)
          (!-o gamma e1 `(-> ,t ,type))
@@ -174,10 +181,11 @@
          (== `(pair ,res1 ,res2) res)
          (evalo gamma e1 res1)
          (evalo gamma e2 res2))]
-      [(fresh (f e body t)
-         (== `(let-poly ((,f ,e)) ,body) expr)
+      [(fresh (f z e body t)
+         (== `(let-poly ((,f (lambda (,z) ,e))) ,body) expr)
          (symbolo f)
-         (evalo `((,f (rec ,e)) . ,gamma) body res))]
+         (symbolo z)
+         (evalo `((,f (rec (lambda (,z) ,e))) . ,gamma) body res))]
       [(fresh (e1 e2 x body res1 res2 gamma2)
          (== `(@ ,e1 ,e2) expr)
          (== res1 `(closure (,x) ,body ,gamma2))
@@ -193,14 +201,6 @@
 (test "1"
   (run* (q) (lookupo `((w (mono bool)) (z (mono int))) 'z q))
   '(int))
-
-(test "2"
-  (run* (q) (lookupo `((w (poly `() #f)) (z (mono int))) 'w q))
-  '(bool))
-
-(test "3"  
-  (run* (q) (lookupo `((w (poly ((x (mono bool))) x)) (z (mono int))) 'w q))
-  '(bool))
 
 (test "4"
   (run* (q) (lookupo `((x (mono a))) 'x q))
