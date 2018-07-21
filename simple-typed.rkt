@@ -535,9 +535,9 @@
           expr)
       (== `(list (list int)) type)
       (== `(cons nil
-           (cons (cons 1 (cons 2 nil))
-                 (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
-                       nil)))
+                 (cons (cons 1 (cons 2 nil))
+                       (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                             nil)))
           val)
       (!-o '() expr type)
       (evalo '() expr val)))
