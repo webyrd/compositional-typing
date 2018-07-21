@@ -172,11 +172,11 @@
          (== `(cons ,v1 ,v2) val)
          (evalo env e1 v1)
          (evalo env e2 v2))]
-      [(fresh (e1 e2 res1 res2)
+      [(fresh (e1 e2 v1 v2)
          (== `(pair ,e1 ,e2) expr)
-         (== `(pair ,res1 ,res2) val)
-         (evalo env e1 res1)
-         (evalo env e2 res2))]
+         (== `(pair ,v1 ,v2) val)
+         (evalo env e1 v1)
+         (evalo env e2 v2))]
       [(fresh (e1 e2 e3 res1 res2 res3)
          (== `(if ,e1 ,e2 ,e3) expr)
          (evalo env e1 res1)
