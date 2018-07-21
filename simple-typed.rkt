@@ -182,22 +182,22 @@
          (evalo env e1 v1)
          (conde
            [(== #t v1) (== v2 val) (evalo env e2 v2)]
-           [(== #f v2) (== v3 val) (evalo env e3 v3)]))]      
+           [(== #f v2) (== v3 val) (evalo env e3 v3)]))]
       [(fresh (f z e body t)
          (== `(let-poly ((,f (lambda (,z) ,e))) ,body) expr)
          (symbolo f)
          (symbolo z)
          (evalo `((,f (rec (lambda (,z) ,e))) . ,env) body val))]
-      [(fresh (x body t t^)
+      [(fresh (x body)
          (== `(lambda (,x) ,body) expr)
          (== `(closure (,x) ,body ,env) val))]
-      [(fresh (e1 e2 x body res1 res2 env2)
+      [(fresh (e1 e2 x body v1 v2 env^)
          (== `(@ ,e1 ,e2) expr)
-         (== `(closure (,x) ,body ,env2) res1)
+         (== `(closure (,x) ,body ,env^) v1)
          (symbolo x)
-         (evalo env e1 res1)
-         (evalo env e2 res2)
-         (evalo `((,x (val ,res2)) . ,env2) body val))])))
+         (evalo env e1 v1)
+         (evalo env e2 v2)
+         (evalo `((,x (val ,v2)) . ,env^) body val))])))
 
 
 (test "1"
