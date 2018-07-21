@@ -424,14 +424,35 @@
                    q))
   '((list int)))
 
-(test "42b-value"
+(test "42-value"
   (run* (q) (evalo `()
-                   `(let-poly ((append
-                                (lambda (l1)
-                                  (lambda (l2)
-                                    (if (null? l1) l2
-                                        (cons (car l1)
-                                              (@ (@ append (cdr l1)) l2)))))))
+                   `(let-poly ((append (lambda (l1)
+                                         (lambda (l2)
+                                           (if (null? l1) l2
+                                               (cons (car l1)
+                                                     (@ (@ append (cdr l1)) l2)))))))
                       (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
                    q))
   '((cons 1 (cons 2 (cons 3 (cons 4 (cons 5 nil)))))))
+
+(test "42-type-and-value"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1) l2
+                                      (cons (car l1)
+                                            (@ (@ append (cdr l1)) l2)))))))
+             (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
+          expr)
+      (!-o '() expr type)
+      (evalo '() expr val)))
+  '(((list int)
+     (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 nil)))))
+     (let-poly ((append (lambda (l1)
+                          (lambda (l2)
+                            (if (null? l1) l2
+                                (cons (car l1)
+                                      (@ (@ append (cdr l1)) l2)))))))
+       (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
