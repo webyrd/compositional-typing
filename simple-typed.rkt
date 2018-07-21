@@ -66,7 +66,7 @@
          (== 'bool type)
          (!-o gamma e 'int))]
       #|
-      ;; No reason to include + until/unless we include + in evaluator
+      ;; No reason to include '+' until/unless we support '+' in 'evalo'.
       [(fresh (e1 e2)
          (== `(+ ,e1 ,e2) expr)
          (== 'int type)
@@ -152,13 +152,17 @@
          (== res `(cons ,res1 ,res2))
          (evalo gamma e1 res1)
          (evalo gamma e2 res2))]
-      ;; [(fresh (e1 e2 res1 res2)
-      ;;     (== `(+ ,e1 ,e2) expr)
-      ;;     (evalo e1 gamma res1)
-      ;;     (evalo e2 gamma res2)
-      ;;     (numbero res1)
-      ;;     (numbero res2)
-      ;;     (== res (+ res1 res2)))]
+      #|
+      ;; No reason to include '+' until/unless we add support for addition constraints
+      ;; (probably using CLP(FD) or SMT constraints).
+      [(fresh (e1 e2 res1 res2)
+          (== `(+ ,e1 ,e2) expr)
+          (numbero res1)
+          (numbero res2)
+          (+o res1 res2 res)
+          (evalo e1 gamma res1)
+          (evalo e2 gamma res2))]
+      |#
       [(fresh (e1 e2 e3 res1 res2 res3)
          (== `(if ,e1 ,e2 ,e3) expr)
          (evalo gamma e1 res1)
