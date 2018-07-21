@@ -73,11 +73,11 @@
          (!-o gamma e1 'int)
          (!-o gamma e2 'int))]
      |#
-      [(fresh (e1 e2 t)
+      [(fresh (e1 e2 a)
          (== `(cons ,e1 ,e2) expr)
-         (== `(list ,t) type)
-         (!-o gamma e1 t)
-         (!-o gamma e2 `(list ,t)))]
+         (== `(list ,a) type)
+         (!-o gamma e1 a)
+         (!-o gamma e2 `(list ,a)))]
       [(fresh (e1 e2 t1 t2)
          (== `(pair ,e1 ,e2) expr)
          (== `(pair ,t1 ,t2) type)
