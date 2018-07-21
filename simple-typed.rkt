@@ -1249,7 +1249,8 @@
                            nil))))))))
 
 
-
+;;; Something seems wrong!  How can '#f' be passed in as the argument to 'append'?
+;;; 'null?' expects a list, not a bool.
 (time
   (test "append-type-synthesis-c"
     (run 1 (q)
@@ -1285,6 +1286,10 @@
                      (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
+;;; Something seems wrong!  How can '#f' be passed in as the argument to 'append'?
+;;; 'null?' expects a list, not a bool.
+;;;
+;;; Also, we are specifying that 'append' takes '(list int)'.
 (time
   (test "append-type-synthesis-with-append-c"
     (run 1 (q)
