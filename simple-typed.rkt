@@ -174,10 +174,10 @@
          (== `(pair ,res1 ,res2) res)
          (evalo gamma e1 res1)
          (evalo gamma e2 res2))]
-      [(fresh (e1 e2 e3 t)
-         (== `(let-poly ((,e1 ,e2)) ,e3) expr)
-         (symbolo e1)
-         (evalo `((,e1 (rec ,e2)) . ,gamma) e3 res))]
+      [(fresh (f e body t)
+         (== `(let-poly ((,f ,e)) ,body) expr)
+         (symbolo f)
+         (evalo `((,f (rec ,e)) . ,gamma) body res))]
       [(fresh (e1 e2 x body res1 res2 gamma2)
          (== `(@ ,e1 ,e2) expr)
          (== res1 `(closure (,x) ,body ,gamma2))
