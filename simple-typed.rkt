@@ -16,8 +16,8 @@
        (let* ((expected expected-result)
               (produced tested-expression))
          (unless (equal? expected produced)
-           (error 'test (format "Failed: ~a~%Expected: ~a~%Computed: ~a~%"
-                                'tested-expression expected produced))))))))
+           (printf "Failed: ~a~%Expected: ~a~%Computed: ~a~%" 'tested-expression expected produced)
+           (error 'test "")))))))
 
 
 ;;; Simply-typed with definition expansion
@@ -543,6 +543,31 @@
              (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
                    (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
+
+(test "43-type-including-append"
+  (run* (q)
+    (fresh (expr type)
+      (== (list type expr) q)
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1)
+                                      l2
+                                      (cons (car l1)
+                                            (@ (@ append (cdr l1)) l2)))))))
+             (pair append
+                   (cons (@ (@ append nil) nil)
+                         (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                               (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                     nil)))))
+          expr)
+      (!-o '() expr type)))
+  '(((pair (-> (list int) (-> (list int) (list int))) (list (list int)))
+     (let-poly ((append (lambda (l1) (lambda (l2) (if (null? l1) l2 (cons (car l1) (@ (@ append (cdr l1)) l2)))))))
+       (pair append
+             (cons (@ (@ append nil) nil)
+                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                               nil))))))))
 
 (test "43-value"
   (run* (q)
