@@ -868,6 +868,48 @@
        (=/= ((_.0 1)) ((_.0 2)) ((_.0 3)) ((_.0 4)) ((_.0 5)) ((_.0 6))) (num _.0)))))
 
 (time
+  (test "append-type-synthesis-a-with-append"
+    (run 1 (q)
+      (fresh (expr type e)
+        (== (list type expr) q)
+        (absento 1 e)
+        (absento 2 e)
+        (absento 3 e)
+        (absento 4 e)
+        (absento 5 e)
+        (absento 6 e)
+        (== `(let-poly ((append (lambda (l1)
+                                  (lambda (l2)
+                                    (if (null? l1)
+                                        l2
+                                        (cons ,e
+                                              (@ (@ append (cdr l1)) l2)))))))
+               (pair append
+                     (cons (@ (@ append nil) nil)
+                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (-> (list int) (list int)))
+                   (list (list int)))
+            type)
+        (!-o '() expr type)))
+    '((((pair (-> (list int) (-> (list int) (list int)))
+              (list (list int)))
+        (let-poly ((append (lambda (l1)
+                             (lambda (l2)
+                               (if (null? l1)
+                                   l2
+                                   (cons _.0
+                                         (@ (@ append (cdr l1)) l2)))))))
+          (pair append
+                (cons (@ (@ append nil) nil)
+                      (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                            (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                  nil))))))
+       (=/= ((_.0 1)) ((_.0 2)) ((_.0 3)) ((_.0 4)) ((_.0 5)) ((_.0 6))) (num _.0)))))
+
+(time
   (test "append-value-synthesis-a"
     (run 1 (q)
       (fresh (expr val e)
