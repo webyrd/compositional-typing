@@ -1269,6 +1269,34 @@
   '((pair (-> (list int) (-> (list int) (list int)))
           (list (list int)))))
 
+(test "null?-2"
+  (run* (q)
+    (fresh (expr)
+      (== `(null? #f)
+          expr)
+      (!-o '() expr q)))
+  '())
+
+(test "null?-3"
+  (run* (q)
+    (fresh (expr)
+      (== `((lambda (l1)
+              (null? l1))
+            #f)
+          expr)
+      (!-o '() expr q)))
+  '())
+
+(test "null?-4"
+  (run* (q)
+    (fresh (expr)
+      (== `(let-poly ((f (lambda (l1)
+                           (null? l1)))) 
+             (f #f))
+          expr)
+      (!-o '() expr q)))
+  '())
+
 ;;; Something seems wrong!  How can '#f' be passed in as the argument to 'append'?
 ;;; 'null?' expects a list, not a bool.
 (time
