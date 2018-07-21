@@ -46,6 +46,13 @@
       [(== 'nil expr)
        (fresh (a)
          (== `(list ,a) type))]
+      [(symbolo expr)
+       (=/= expr 'nil)
+       (lookupo gamma expr type)]
+      [(fresh (e a)
+         (== `(null? ,e) expr)
+         (== 'bool type)
+         (!-o gamma e `(list ,a)))]      
       [(fresh (e a)
          (== `(car ,e) expr)
          (== a type)
@@ -54,13 +61,6 @@
          (== `(cdr ,e) expr)
          (== `(list ,a) type)
          (!-o gamma e `(list ,a)))]
-      [(fresh (e a)
-         (== `(null? ,e) expr)
-         (== 'bool type)
-         (!-o gamma e `(list ,a)))]
-      [(symbolo expr)
-       (=/= expr 'nil)
-       (lookupo gamma expr type)]
       [(fresh (e)
          (== `(zero? ,e) expr)
          (== 'bool type)
@@ -70,11 +70,6 @@
          (== 'int type)
          (!-o gamma e1 'int)
          (!-o gamma e2 'int))]
-      [(fresh (e1 e2 e3)
-         (== `(if ,e1 ,e2 ,e3) expr)
-         (!-o gamma e1 'bool)
-         (!-o gamma e2 type)
-         (!-o gamma e3 type))]
       [(fresh (e1 e2 t)
          (== `(cons ,e1 ,e2) expr)
          (== `(list ,t) type)
@@ -85,6 +80,11 @@
          (== `(pair ,t1 ,t2) type)
          (!-o gamma e1 t1)
          (!-o gamma e2 t2))]
+      [(fresh (e1 e2 e3)
+         (== `(if ,e1 ,e2 ,e3) expr)
+         (!-o gamma e1 'bool)
+         (!-o gamma e2 type)
+         (!-o gamma e3 type))]      
       [(fresh (e1 e2 e3 t)
          (== `(let-poly ((,e1 ,e2)) ,e3) expr)
          (symbolo e1)
