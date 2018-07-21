@@ -137,9 +137,7 @@
       [(== 'nil expr) (== 'nil val)]
       [(symbolo expr)
        (=/= 'nil expr)
-       (fresh (res1)
-         (== val res1)
-         (lookup-evalo env expr res1))]
+       (lookup-evalo env expr val)]
       [(fresh (res1 e)
          (== `(null? ,e) expr)
          (conde
