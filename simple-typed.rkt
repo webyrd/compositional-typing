@@ -1,5 +1,11 @@
 #lang racket
 
+;; Relational type inferencer/evaluator for a subset of an ML-like language,
+;; using s-expression syntax.
+
+;; Trying to combine type inferencer and evaluator for the same
+;; language, to improve synthesis performance.
+
 (require "faster-miniKanren/mk.rkt")
 
 (define-syntax test
