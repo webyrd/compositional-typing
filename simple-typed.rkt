@@ -2350,3 +2350,73 @@
                          (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))))))
 
+
+(time
+  (test "append-!-/evalo-synthesis-with-append-c"
+    (run 1 (q)
+      (fresh (expr type val e clos)
+        (== (list type val expr) q)
+        (absento 1 e)
+        (absento 2 e)
+        (absento 3 e)
+        (absento 4 e)
+        (absento 5 e)
+        (absento 6 e)
+        (== `(let-poly ((append (lambda (l1)
+                                  (lambda (l2)
+                                    (if (null? l1)
+                                        l2
+                                        (cons (car l1)
+                                              (@ (@ append ,e) l2)))))))
+               (pair append
+                     (cons (@ (@ append nil) nil)
+                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (-> (list int) (list int)))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 1 (cons 2 nil))
+                               (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                                     nil))))
+            val)
+        (!-/evalo '() '() expr type val)))
+    '(((pair (-> (list int) (-> (list int) (list int)))
+             (list (list int)))
+       (pair (closure (l1)
+                      (lambda (l2)
+                        (if (null? l1)
+                            l2
+                            (cons (car l1)
+                                  (@ (@ append (cdr l1)) l2))))
+                      ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
+                                     (lambda (l1)
+                                       (lambda (l2)
+                                         (if (null? l1)
+                                             l2
+                                             (cons (car l1)
+                                                   (@ (@ append (cdr l1)) l2))))))))
+                      ((append (rec (lambda (l1)
+                                      (lambda (l2)
+                                        (if (null? l1)
+                                            l2
+                                            (cons (car l1)
+                                                  (@ (@ append (cdr l1)) l2)))))))))
+             (cons nil
+                   (cons (cons 1 (cons 2 nil))
+                         (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                               nil))))
+       (let-poly ((append (lambda (l1)
+                            (lambda (l2)
+                              (if (null? l1)
+                                  l2
+                                  (cons (car l1)
+                                        (@ (@ append (cdr l1)) l2)))))))
+         (pair append
+               (cons (@ (@ append nil) nil)
+                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                 nil)))))))))
