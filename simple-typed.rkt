@@ -3678,7 +3678,79 @@
                                          nil)))))))))
 
 (time
-  (test "stutter-!-/evalo-with-stutter-synthesis-2"
+  ;; use unique numbers for all examples
+  (test "stutter-!-/evalo-with-stutter-synthesis-2a"
+    (run 1 (q)
+      (fresh (expr type val f-body clos e)
+        (== (list type val expr) q)
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)
+        (== `(lambda (l)
+               (if (null? l)
+                     nil
+                     (cons (car l)
+                           (cons (car l)
+                                 ,e))))
+            f-body)
+        (== `(let-poly ((stutter ,f-body))
+               (pair stutter
+                     (cons (@ stutter nil)
+                           (cons (@ stutter (cons 0 nil))
+                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (list int))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 0 (cons 0 nil))
+                               (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                                     nil))))
+            val)        
+        (!-/evalo '() '() expr type val)))
+    '(((pair (-> (list int) (list int))
+             (list (list int)))
+       (pair (closure (l)
+                      (if (null? l)
+                          nil
+                          (cons (car l)
+                                (cons (car l)
+                                      (@ stutter (cdr l)))))
+                      ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
+                                      (lambda (l)
+                                        (if (null? l)
+                                            nil
+                                            (cons (car l)
+                                                  (cons (car l)
+                                                        (@ stutter (cdr l)))))))))
+                      ((stutter (rec (lambda (l)
+                                       (if (null? l)
+                                           nil
+                                           (cons (car l)
+                                                 (cons (car l)
+                                                       (@ stutter (cdr l))))))))))
+             (cons nil
+                   (cons (cons 0 (cons 0 nil))
+                         (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                               nil))))
+       (let-poly ((stutter (lambda (l)
+                             (if (null? l)
+                                 nil
+                                 (cons (car l)
+                                       (cons (car l)
+                                             (@ stutter (cdr l))))))))
+         (pair stutter (cons (@ stutter nil)
+                             (cons (@ stutter (cons 0 nil))
+                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                         nil)))))))))
+
+(time
+  (test "stutter-!-/evalo-with-stutter-synthesis-2b"
     (run 1 (q)
       (fresh (expr type val f-body clos e)
         (== (list type val expr) q)
@@ -3748,11 +3820,227 @@
                                    (cons (@ stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
 
-(printf "**** commenting out stutter-!-/evalo-with-stutter-synthesis-3 test, which isn't returning\n")
-(printf "****   this test really should be doing better, given the type information...\n")
-#|
+(printf "!!!!   none of the following tests seem to come back in a reasonable time...\n")
+
+(printf "****   these tests really should be doing better, given the type information...\n")
+
 (time
-  (test "stutter-!-/evalo-with-stutter-synthesis-3"
+  ;; use unique numbers for all examples
+  (test "stutter-!-/evalo-with-stutter-synthesis-3a"
+    (run 1 (q)
+      (fresh (expr type val f-body clos e1 e2)
+        (== (list type val expr) q)
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)        
+        (== `(lambda (l)
+               (if (null? l)
+                     nil
+                     (cons (car l)
+                           (cons (car ,e1)
+                                 ,e2))))
+            f-body)
+        (== `(let-poly ((stutter ,f-body))
+               (pair stutter
+                     (cons (@ stutter nil)
+                           (cons (@ stutter (cons 0 nil))
+                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (list int))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 0 (cons 0 nil))
+                               (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                                     nil))))
+            val)        
+        (!-/evalo '() '() expr type val)))
+    '(((pair (-> (list int) (list int))
+             (list (list int)))
+       (pair (closure (l)
+                      (if (null? l)
+                          nil
+                          (cons (car l)
+                                (cons (car l)
+                                      (@ stutter (cdr l)))))
+                      ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
+                                      (lambda (l)
+                                        (if (null? l)
+                                            nil
+                                            (cons (car l)
+                                                  (cons (car l)
+                                                        (@ stutter (cdr l)))))))))
+                      ((stutter (rec (lambda (l)
+                                       (if (null? l)
+                                           nil
+                                           (cons (car l)
+                                                 (cons (car l)
+                                                       (@ stutter (cdr l))))))))))
+             (cons nil
+                   (cons (cons 0 (cons 0 nil))
+                         (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                               nil))))
+       (let-poly ((stutter (lambda (l)
+                             (if (null? l)
+                                 nil
+                                 (cons (car l)
+                                       (cons (car l)
+                                             (@ stutter (cdr l))))))))
+         (pair stutter (cons (@ stutter nil)
+                             (cons (@ stutter (cons 0 nil))
+                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                         nil)))))))))
+
+(time
+  (test "stutter-!-/evalo-with-stutter-synthesis-3b"
+    (run 1 (q)
+      (fresh (expr type val f-body clos e1 e2)
+        (== (list type val expr) q)
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)
+        (== `(lambda (l)
+               (if (null? l)
+                     nil
+                     (cons (car l)
+                           (cons (car ,e1)
+                                 ,e2))))
+            f-body)
+        (== `(let-poly ((stutter ,f-body))
+               (pair stutter
+                     (cons (@ stutter nil)
+                           (cons (@ stutter (cons 0 nil))
+                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (list int))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 0 (cons 0 nil))
+                               (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
+                                     nil))))
+            val)        
+        (!-/evalo '() '() expr type val)))
+    '(((pair (-> (list int) (list int))
+             (list (list int)))
+       (pair (closure (l)
+                      (if (null? l)
+                          nil
+                          (cons (car l)
+                                (cons (car l)
+                                      (@ stutter (cdr l)))))
+                      ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
+                                      (lambda (l)
+                                        (if (null? l)
+                                            nil
+                                            (cons (car l)
+                                                  (cons (car l)
+                                                        (@ stutter (cdr l)))))))))
+                      ((stutter (rec (lambda (l)
+                                       (if (null? l)
+                                           nil
+                                           (cons (car l)
+                                                 (cons (car l)
+                                                       (@ stutter (cdr l))))))))))
+             (cons nil
+                   (cons (cons 0 (cons 0 nil))
+                         (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
+                               nil))))
+       (let-poly ((stutter (lambda (l)
+                             (if (null? l)
+                                 nil
+                                 (cons (car l)
+                                       (cons (car l)
+                                             (@ stutter (cdr l))))))))
+         (pair stutter (cons (@ stutter nil)
+                             (cons (@ stutter (cons 0 nil))
+                                   (cons (@ stutter (cons 1 (cons 0 nil)))
+                                         nil)))))))))
+
+(time
+  ;; use unique numbers for all examples
+  (test "stutter-!-/evalo-with-stutter-synthesis-4a"
+    (run 1 (q)
+      (fresh (expr type val f-body clos e1 e2)
+        (== (list type val expr) q)
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)
+        (== `(lambda (l)
+               (if (null? l)
+                     nil
+                     (cons (car l)
+                           (cons ,e1
+                                 ,e2))))
+            f-body)
+        (== `(let-poly ((stutter ,f-body))
+               (pair stutter
+                     (cons (@ stutter nil)
+                           (cons (@ stutter (cons 0 nil))
+                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (list int))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 0 (cons 0 nil))
+                               (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                                     nil))))
+            val)        
+        (!-/evalo '() '() expr type val)))
+    '(((pair (-> (list int) (list int))
+             (list (list int)))
+       (pair (closure (l)
+                      (if (null? l)
+                          nil
+                          (cons (car l)
+                                (cons (car l)
+                                      (@ stutter (cdr l)))))
+                      ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
+                                      (lambda (l)
+                                        (if (null? l)
+                                            nil
+                                            (cons (car l)
+                                                  (cons (car l)
+                                                        (@ stutter (cdr l)))))))))
+                      ((stutter (rec (lambda (l)
+                                       (if (null? l)
+                                           nil
+                                           (cons (car l)
+                                                 (cons (car l)
+                                                       (@ stutter (cdr l))))))))))
+             (cons nil
+                   (cons (cons 0 (cons 0 nil))
+                         (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                               nil))))
+       (let-poly ((stutter (lambda (l)
+                             (if (null? l)
+                                 nil
+                                 (cons (car l)
+                                       (cons (car l)
+                                             (@ stutter (cdr l))))))))
+         (pair stutter (cons (@ stutter nil)
+                             (cons (@ stutter (cons 0 nil))
+                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                         nil)))))))))
+
+(time
+  (test "stutter-!-/evalo-with-stutter-synthesis-4b"
     (run 1 (q)
       (fresh (expr type val f-body clos e1 e2)
         (== (list type val expr) q)
@@ -3821,4 +4109,4 @@
                              (cons (@ stutter (cons 0 nil))
                                    (cons (@ stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
-|#
+
