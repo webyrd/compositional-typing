@@ -169,7 +169,7 @@
          (evalo env e1 v1)
          (conde
            [(== #t v1) (== v2 val) (evalo env e2 v2)]
-           [(== #f v2) (== v3 val) (evalo env e3 v3)]))]
+           [(== #f v1) (== v3 val) (evalo env e3 v3)]))]
       [(fresh (f z e body t)
          (== `(let-poly ((,f (lambda (,z) ,e)))
                 ,body)
@@ -198,10 +198,12 @@
 ;; Assumption used in 'lookup-!-/evalo': !-/evalo extends 'gamma' and
 ;; 'env' at the same time, with the same variable names, in the same
 ;; order (and similarly for the initial 'gamma' and 'env', if
-;; non-empty).
+;; non-empty).  Furthermore, we assume (val ,v) and (mono ,t) entries
+;; occur together, as do (rec (lambda (,z) ,e)) and
+;; (poly ,gamma^ (lambda (,z) ,e)) entries.
 (define lookup-!-/evalo
   (lambda (gamma env x type val)
-    (fresh (y t v rest-gamma rest-env)
+    (fresh (y t v rest-gamma rest-env z e)
       (symbolo x)
       (== `((,y ,t) . ,rest-gamma) gamma)
       (== `((,y ,v) . ,rest-env) env)
@@ -209,16 +211,13 @@
       (conde
         [(== x y)
          (conde
-           [(== `(val ,val) v)]
-           [(fresh (z e)
-              (== `(rec (lambda (,z) ,e)) v)
-              (symbolo z)
-              (== `(closure (,z) ,e ,env) val))])
-         (conde
-           [(== t `(mono ,type))]
-           [(fresh (z e gamma^)
-              (== t `(poly ,gamma^ (lambda (,z) ,e)))
-              (symbolo z)
+           [(== `(val ,val) v)
+            (== `(mono ,type) t)]
+           [(== `(rec (lambda (,z) ,e)) v)
+            (symbolo z)
+            (== `(closure (,z) ,e ,gamma ,env) val)
+            (fresh (gamma^)
+              (== `(poly ,gamma^ (lambda (,z) ,e)) t)
               ;; This is a call to '!-o', not a recursive call to 'lookup-!-/evalo'
               (!-o gamma^ `(lambda (,z) ,e) type))])]
         [(=/= x y)
@@ -231,9 +230,9 @@
       [(== #t expr) (== 'bool type) (== #t val)]
       [(numbero expr) (== 'int type) (== expr val)]
       [(== 'nil expr)
+       (== 'nil val)
        (fresh (a)
-         (== `(list ,a) type))
-       (== 'nil val)]
+         (== `(list ,a) type))]
       [(symbolo expr)
        (=/= 'nil expr)
        (lookup-!-/evalo gamma env expr type val)]
@@ -262,9 +261,9 @@
       [(fresh (e1 e2 a t v1 v2)
          (== `(cons ,e1 ,e2) expr)
          (== `(list ,a) type)
-         (== `(cons ,v1 ,v2) val)         
-         (!-/evalo gamma env e1 `(list ,a) v1)
-         (!-/evalo gamma env e2 a v2))]
+         (== `(cons ,v1 ,v2) val)
+         (!-/evalo gamma env e2 `(list ,a) v2)
+         (!-/evalo gamma env e1 a v1))]
       [(fresh (e1 e2 t1 t2 v1 v2)
          (== `(pair ,e1 ,e2) expr)
          (== `(pair ,t1 ,t2) type)
@@ -276,7 +275,7 @@
          (!-/evalo gamma env e1 'bool v1)
          (conde
            [(== #t v1) (== v2 val) (!-/evalo gamma env e2 type v2)]
-           [(== #f v2) (== v3 val) (!-/evalo gamma env e3 type v3)]))]
+           [(== #f v1) (== v3 val) (!-/evalo gamma env e3 type v3)]))]
       [(fresh (f z e body t)
          (== `(let-poly ((,f (lambda (,z) ,e)))
                 ,body)
@@ -284,11 +283,6 @@
          (symbolo f)
          (symbolo z)
 
-         ;; Make sure the right-hand-side of 'f' has a type, but then forget about the type.         
-         (fresh (forget-me)
-           ;; This is a call to '!-o', not a recursive call to '!-/evalo'
-           (!-o `((,f (mono ,forget-me)) . ,gamma) `(lambda (,z) ,e) forget-me))
-         
          (!-/evalo
           ;; Add the right-hand-side of the binding (an expression) to the environment for use later.
           `((,f (poly ((,f (mono ,t)) . ,gamma)
@@ -297,21 +291,89 @@
           `((,f (rec (lambda (,z) ,e))) . ,env)
           body
           type
-          val))]
+          val)
+
+         ;; Make sure the right-hand-side of 'f' has a type, but then forget about the type.
+         ;;
+         ;; This is in case 'f' is not used in 'body'--we still must
+         ;; make sure the right-hand-side of 'f' has a type.
+         (fresh (forget-me)
+           ;; This is a call to '!-o', not a recursive call to '!-/evalo'
+           (!-o `((,f (mono ,forget-me)) . ,gamma) `(lambda (,z) ,e) forget-me))
+
+         )]
       [(fresh (x body t t^)
          (== `(lambda (,x) ,body) expr)
          (symbolo x)
          (== `(-> ,t ,t^) type)
-         (== `(closure (,x) ,body ,env) val)
+         (== `(closure (,x) ,body ,gamma ,env) val)
          ;; This is a call to '!-o', not a recursive call to '!-/evalo'
          (!-o `((,x (mono ,t)) . ,gamma) body t^))]
-      [(fresh (e1 e2 t x body arg env^)
+      [(fresh (e1 e2 t x body arg gamma^ env^ some-gamma)
          (== `(@ ,e1 ,e2) expr)
          (symbolo x)
-         (!-/evalo gamma env e1 `(-> ,t ,type) `(closure (,x) ,body ,env^))
+         (!-/evalo gamma env e1 `(-> ,t ,type) `(closure (,x) ,body ,gamma^ ,env^))
          (!-/evalo gamma env e2 t arg)
-         (!-/evalo `((,x (mono ,t)) . ,gamma) `((,x (val ,arg)) . ,env^) body type val))])))
+         (!-/evalo `((,x (mono ,t)) . ,gamma^) `((,x (val ,arg)) . ,env^) body type val))])))
 
+
+(test "!-/evalo-42-simple-run*"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1)
+                                      l2
+                                      (cons (car l1)
+                                            (@ (@ append (cdr l1)) l2)))))))
+             (@ (@ append nil) nil))
+          expr)
+      (!-/evalo '() '() expr type val)))
+  '(((list _.0)
+     nil
+     (let-poly ((append (lambda (l1)
+                          (lambda (l2)
+                            (if (null? l1)
+                                l2
+                                (cons (car l1)
+                                      (@ (@ append (cdr l1)) l2)))))))
+       (@ (@ append nil) nil)))))
+
+
+(test "!o-if-1"
+  (run* (q)
+    (fresh (expr)
+      (== `(if (null? (cons 1 nil))
+               3
+               4)
+          expr)
+      (!-o '()
+           expr                
+           q)))
+  '(int))
+
+(test "!o-if-2"
+  (run* (q)
+    (fresh (expr)
+      (== `(if (null? nil)
+               3
+               4)
+          expr)
+      (!-o '()       
+           expr                
+           q)))
+  '(int))
+
+(test "!-o-and-evalo-cons-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(cons 1 nil)
+          expr)
+      (!-o '() expr type)
+      (evalo '() expr val)))
+  '(((list int) (cons 1 nil))))
 
 (test "1"
   (run* (q) (lookup-!-o `((w (mono bool)) (z (mono int))) 'z q))
@@ -485,6 +547,30 @@
 (test "29"
   (run* (q) (evalo `() `(cons 3 #f) q))
   '((cons 3 #f)))
+
+(test "evalo-if-1"
+  (run* (q)
+    (fresh (expr)
+      (== `(if (null? (cons 1 nil))
+               3
+               4)
+          expr)
+      (evalo '()       
+             expr                
+             q)))
+  '(4))
+
+(test "evalo-if-2"
+  (run* (q)
+    (fresh (expr)
+      (== `(if (null? nil)
+               3
+               4)
+          expr)
+      (evalo '()       
+             expr                
+             q)))
+  '(3))
 
 (test "30"
   (run* (q) (evalo `()
@@ -1709,3 +1795,558 @@
                      (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
                            (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
+
+
+
+
+
+(test "!-/evalo-number-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `5
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '((int 5)))
+
+(test "!-/evalo-nil-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `nil
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '(((list _.0) nil)))
+
+(test "!-/evalo-pair-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(pair 1 #t)
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '(((pair int bool) (pair 1 #t))))
+
+(test "!-/evalo-pair-2"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(pair 1 nil)
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '(((pair int (list _.0)) (pair 1 nil))))
+
+(test "!-/evalo-cons-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(cons 1 nil)
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '(((list int) (cons 1 nil))))
+
+(test "!-/evalo-car-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(car (cons 1 nil))
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '((int 1)))
+
+(test "!-/evalo-cdr-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(cdr (cons 1 nil))
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '(((list int) nil)))
+
+(test "!-/evalo-null?-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(null? (cons 1 nil))
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '((bool #f)))
+
+(test "!-/evalo-null?-2"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(null? nil)
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '((bool #t)))
+
+(test "!-/evalo-if-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(if (null? (cons 1 nil))
+               3
+               4)
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '((int 4)))
+
+(test "!-/evalo-if-2"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(if (null? nil)
+               3
+               4)
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '((int 3)))
+
+(test "!-/evalo-5"
+  (run* (q)
+    (fresh (type val)
+      (== (list type val) q)
+      (!-/evalo '() '() 3 type val)))
+  '((int 3)))
+
+(test "!-/evalo-6"
+  (run* (q)
+    (fresh (type val)
+      (== (list type val) q)
+      (!-/evalo '() '() #f type val)))
+  '((bool #f)))
+
+(test "!-/evalo-let-poly-type-1"
+  (run* (q)
+    (fresh (type val)
+      (== (list type val) q)
+      (!-/evalo '()
+                '()
+                '(let-poly ((f (lambda (w)
+                                 (@ w w))))
+                   5)
+                type
+                val)))
+  '())
+
+(test "!-/evalo-let-poly-type-2"
+  (run* (q)
+    (fresh (type val)
+      (== (list type val) q)
+      (!-/evalo '()
+                '()
+                '(let-poly ((f (lambda (w)
+                                 (@ w 3))))
+                   5)
+                type
+                val)))
+  '((int 5)))
+
+(test "!-/evalo-identity-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(lambda (w) w)
+          expr)      
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '(((-> _.0 _.0) (closure (w) w () ()))))
+
+(test "!-/evalo-identity-2"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(@ (lambda (w) w)
+              3)
+          expr)      
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '((int 3)))
+
+(test "!-/evalo-identity-3"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(@ (lambda (w) w)
+              (cons 1 nil))
+          expr)
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))
+  '(((list int) (cons 1 nil))))
+
+(test "!-/evalo-null?-7a"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(@ (lambda (f)
+                (@ f (cons 1 nil)))
+              (lambda (l1)
+                (lambda (l2)
+                  (if (null? l1)
+                      3
+                      4))))
+          expr)      
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))  
+  '(((-> _.0 int) (closure (l2)
+                           (if (null? l1) 3 4)
+                           ((l1 (mono (list int))))
+                           ((l1 (val (cons 1 nil))))))))
+
+(test "!-/evalo-null?-7b"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val) q)
+      (== `(let-poly ((f (lambda (l1)
+                           (lambda (l2)
+                             (if (null? l1)
+                                 3
+                                 4)))))
+             (@ f (cons 1 nil)))
+          expr)      
+      (!-/evalo '()
+                '()
+                expr
+                type
+                val)))  
+  '(((-> _.0 int)
+     (closure (l2)
+              (if (null? l1) 3 4)
+              ((l1 (mono (list int)))
+               (f (poly ((f (mono _.1)))
+                        (lambda (l1)
+                          (lambda (l2)
+                            (if (null? l1)
+                                3
+                                4))))))
+              ((l1 (val (cons 1 nil)))
+               (f (rec (lambda (l1)
+                         (lambda (l2)
+                           (if (null? l1)
+                               3
+                               4))))))))))
+
+(test "!-/evalo-rebuild-1"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)      
+      (== `(let-poly ((rebuild (lambda (l)
+                                 (if (null? l)
+                                     nil
+                                     (cons (car l)
+                                           (@ rebuild (cdr l)))))))
+             rebuild)
+          expr)
+      (!-/evalo '() '() expr type val)))
+  '(((-> (list _.0) (list _.0))
+     (closure (l)
+              (if (null? l)
+                  nil
+                  (cons (car l)
+                        (@ rebuild (cdr l))))
+              ((rebuild (poly ((rebuild (mono (-> (list _.0) (list _.0)))))
+                              (lambda (l)
+                                (if (null? l)
+                                    nil
+                                    (cons (car l)
+                                          (@ rebuild (cdr l))))))))
+              ((rebuild (rec (lambda (l)
+                               (if (null? l)
+                                   nil
+                                   (cons (car l)
+                                         (@ rebuild (cdr l)))))))))
+     (let-poly ((rebuild (lambda (l)
+                           (if (null? l)
+                               nil
+                               (cons (car l)
+                                     (@ rebuild (cdr l)))))))
+       rebuild))))
+
+(test "!-/evalo-rebuild-2"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)      
+      (== `(let-poly ((rebuild (lambda (l)
+                                 (if (null? l)
+                                     nil
+                                     (cons (car l)
+                                           (@ rebuild (cdr l)))))))
+             (@ rebuild nil))
+          expr)
+      (!-/evalo '() '() expr type val)))
+  '(((list _.0)
+     nil
+     (let-poly ((rebuild (lambda (l)
+                           (if (null? l)
+                               nil
+                               (cons (car l)
+                                     (@ rebuild (cdr l)))))))
+       (@ rebuild nil)))))
+
+(test "!-/evalo-rebuild-3"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)      
+      (== `(let-poly ((rebuild (lambda (l)
+                                 (if (null? l)
+                                     nil
+                                     (cons (car l)
+                                           (@ rebuild (cdr l)))))))
+             (@ rebuild (cons 1 nil)))
+          expr)
+      (!-/evalo '() '() expr type val)))
+  '(((list int)
+     (cons 1 nil)
+     (let-poly ((rebuild (lambda (l)
+                           (if (null? l)
+                               nil
+                               (cons (car l)
+                                     (@ rebuild (cdr l)))))))
+       (@ rebuild (cons 1 nil))))))
+
+(test "!-/evalo-40-simple"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)      
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1)
+                                      l2
+                                      (cons (car l1)
+                                            (@ (@ append (cdr l1)) l2)))))))
+             append)
+          expr)
+      (!-/evalo '() '() expr type val)))
+  '(((-> (list _.0) (-> (list _.0) (list _.0)))
+     (closure (l1)
+              (lambda (l2)
+                (if (null? l1)
+                    l2
+                    (cons (car l1)
+                          (@ (@ append (cdr l1)) l2))))
+              ((append (poly ((append (mono (-> (list _.0) (-> (list _.0) (list _.0))))))
+                             (lambda (l1)
+                               (lambda (l2)
+                                 (if (null? l1)
+                                     l2
+                                     (cons (car l1)
+                                           (@ (@ append (cdr l1)) l2))))))))
+              ((append (rec (lambda (l1)
+                              (lambda (l2)
+                                (if (null? l1)
+                                    l2
+                                    (cons (car l1)
+                                          (@ (@ append (cdr l1)) l2)))))))))
+     (let-poly ((append (lambda (l1)
+                          (lambda (l2)
+                            (if (null? l1)
+                                l2
+                                (cons (car l1)
+                                      (@ (@ append (cdr l1)) l2)))))))
+       append))))
+
+(test "!-/evalo-41-simple"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)      
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1)
+                                      l2
+                                      (cons (car l1)
+                                            (@ (@ append (cdr l1)) l2)))))))
+             (@ append nil))
+          expr)
+      (!-/evalo '() '() expr type val)))
+  '(((-> (list _.0) (list _.0))
+     (closure (l2)
+              (if (null? l1)
+                  l2
+                  (cons (car l1)
+                        (@ (@ append (cdr l1)) l2)))
+              ((l1 (mono (list _.0)))
+               (append (poly ((append (mono (-> (list _.0) (-> (list _.0) (list _.0))))))
+                             (lambda (l1)
+                               (lambda (l2)
+                                 (if (null? l1)
+                                     l2
+                                     (cons (car l1)
+                                           (@ (@ append (cdr l1)) l2))))))))
+              ((l1 (val nil))
+               (append (rec (lambda (l1)
+                              (lambda (l2)
+                                (if (null? l1)
+                                    l2
+                                    (cons (car l1)
+                                          (@ (@ append (cdr l1)) l2)))))))))
+     (let-poly ((append (lambda (l1)
+                          (lambda (l2)
+                            (if (null? l1)
+                                l2
+                                (cons (car l1)
+                                      (@ (@ append (cdr l1)) l2)))))))
+       (@ append nil)))))
+
+(test "!-/evalo-42-simple"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)      
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1)
+                                      l2
+                                      (cons (car l1)
+                                            (@ (@ append (cdr l1)) l2)))))))
+             (@ (@ append nil) nil))
+          expr)
+      (!-/evalo '() '() expr type val)))
+  '(((list _.0)
+     nil
+     (let-poly ((append (lambda (l1)
+                          (lambda (l2)
+                            (if (null? l1)
+                                l2
+                                (cons (car l1)
+                                      (@ (@ append (cdr l1)) l2)))))))
+       (@ (@ append nil) nil)))))
+
+(test "!-/evalo-43-type-and-value"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1)
+                                      l2
+                                      (cons (car l1)
+                                            (@ (@ append (cdr l1)) l2)))))))
+             (cons (@ (@ append nil) nil)
+                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                               nil))))
+          expr)
+      (!-/evalo '() '() expr type val)))
+  '(((list (list int))
+     (cons nil
+           (cons (cons 1 (cons 2 nil))
+                 (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                       nil)))
+     (let-poly ((append (lambda (l1)
+                          (lambda (l2)
+                            (if (null? l1)
+                                l2
+                                (cons (car l1)
+                                      (@ (@ append (cdr l1)) l2)))))))
+       (cons (@ (@ append nil) nil)
+             (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                   (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                         nil)))))))
+
+(test "!-/evalo-43-type-and-value-with-append"
+  (run* (q)
+    (fresh (expr type val)
+      (== (list type val expr) q)
+      (== `(let-poly ((append (lambda (l1)
+                                (lambda (l2)
+                                  (if (null? l1)
+                                      l2
+                                      (cons (car l1)
+                                            (@ (@ append (cdr l1)) l2)))))))
+             (pair append
+                   (cons (@ (@ append nil) nil)
+                         (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                               (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                     nil)))))
+          expr)
+      (!-/evalo '() '() expr type val)))
+  '(((pair (-> (list int) (-> (list int) (list int)))
+           (list (list int)))
+     (pair (closure (l1)
+                    (lambda (l2)
+                      (if (null? l1)
+                          l2
+                          (cons (car l1)
+                                (@ (@ append (cdr l1)) l2))))
+                    ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
+                                   (lambda (l1)
+                                     (lambda (l2)
+                                       (if (null? l1)
+                                           l2
+                                           (cons (car l1)
+                                                 (@ (@ append (cdr l1)) l2))))))))
+                    ((append (rec (lambda (l1)
+                                    (lambda (l2)
+                                      (if (null? l1)
+                                          l2
+                                          (cons (car l1)
+                                                (@ (@ append (cdr l1)) l2))))))))) 
+           (cons nil (cons (cons 1 (cons 2 nil)) (cons (cons 3 (cons 4 (cons 5 (cons 6 nil)))) nil))))
+     (let-poly ((append (lambda (l1)
+                          (lambda (l2)
+                            (if (null? l1)
+                                l2
+                                (cons (car l1)
+                                      (@ (@ append (cdr l1)) l2)))))))
+       (pair append
+             (cons (@ (@ append nil) nil)
+                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                               nil))))))))
+
