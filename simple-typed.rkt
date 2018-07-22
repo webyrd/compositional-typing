@@ -29,7 +29,7 @@
       (== `((,y ,t) . ,rest) gamma)
       (symbolo y)
       (conde
-        [(== x y) 
+        [(== x y)
          (conde
            [(== t `(mono ,type))]
            [(== t `(poly ,gamma^ (lambda (,z) ,e)))
@@ -171,20 +171,146 @@
            [(== #t v1) (== v2 val) (evalo env e2 v2)]
            [(== #f v2) (== v3 val) (evalo env e3 v3)]))]
       [(fresh (f z e body t)
-         (== `(let-poly ((,f (lambda (,z) ,e))) ,body) expr)
+         (== `(let-poly ((,f (lambda (,z) ,e)))
+                ,body)
+             expr)
          (symbolo f)
          (symbolo z)
          (evalo `((,f (rec (lambda (,z) ,e))) . ,env) body val))]
       [(fresh (x body)
          (== `(lambda (,x) ,body) expr)
-         (== `(closure (,x) ,body ,env) val))]
-      [(fresh (e1 e2 x body v1 v2 env^)
-         (== `(@ ,e1 ,e2) expr)
-         (== `(closure (,x) ,body ,env^) v1)
          (symbolo x)
-         (evalo env e1 v1)
-         (evalo env e2 v2)
-         (evalo `((,x (val ,v2)) . ,env^) body val))])))
+         (== `(closure (,x) ,body ,env) val))]
+      [(fresh (e1 e2 x body arg env^)
+         (== `(@ ,e1 ,e2) expr)
+         (symbolo x)
+         (evalo env e1 `(closure (,x) ,body ,env^))
+         (evalo env e2 arg)
+         (evalo `((,x (val ,arg)) . ,env^) body val))])))
+
+
+
+
+
+
+
+
+;; Assumption used in 'lookup-!-/evalo': !-/evalo extends 'gamma' and
+;; 'env' at the same time, with the same variable names, in the same
+;; order (and similarly for the initial 'gamma' and 'env', if
+;; non-empty).
+(define lookup-!-/evalo
+  (lambda (gamma env x type val)
+    (fresh (y t v rest-gamma rest-env)
+      (symbolo x)
+      (== `((,y ,t) . ,rest-gamma) gamma)
+      (== `((,y ,v) . ,rest-env) env)
+      (symbolo y)
+      (conde
+        [(== x y)
+         (conde
+           [(== `(val ,val) v)]
+           [(fresh (z e)
+              (== `(rec (lambda (,z) ,e)) v)
+              (symbolo z)
+              (== `(closure (,z) ,e ,env) val))])
+         (conde
+           [(== t `(mono ,type))]
+           [(fresh (z e gamma^)
+              (== t `(poly ,gamma^ (lambda (,z) ,e)))
+              (symbolo z)
+              ;; This is a call to '!-o', not a recursive call to 'lookup-!-/evalo'
+              (!-o gamma^ `(lambda (,z) ,e) type))])]
+        [(=/= x y)
+         (lookup-!-/evalo rest-gamma rest-env x type val)]))))
+
+(define !-/evalo
+  (lambda (gamma env expr type val)
+    (conde
+      [(== #f expr) (== 'bool type) (== #f val)]
+      [(== #t expr) (== 'bool type) (== #t val)]
+      [(numbero expr) (== 'int type) (== expr val)]
+      [(== 'nil expr)
+       (fresh (a)
+         (== `(list ,a) type))
+       (== 'nil val)]
+      [(symbolo expr)
+       (=/= 'nil expr)
+       (lookup-!-/evalo gamma env expr type val)]
+      [(fresh (e a v)
+         (== `(null? ,e) expr)
+         (== 'bool type)
+         (conde
+           [(== 'nil v) (== #t val)]
+           [(=/= 'nil v) (== #f val)])
+         (!-/evalo gamma env e `(list ,a) v))]
+      [(fresh (e a b)
+         (== `(car ,e) expr)
+         (== a type)
+         (!-/evalo gamma env e `(list ,a) `(cons ,val ,b)))]
+      [(fresh (e a b)
+         (== `(cdr ,e) expr)
+         (== `(list ,a) type)
+         (!-/evalo gamma env e `(list ,a) `(cons ,b ,val)))]
+      [(fresh (e v)
+         (== `(zero? ,e) expr)
+         (conde
+           [(== 0 v) (== #t val)]
+           [(=/= 0 v) (== #f val)])
+         (== 'bool type)
+         (!-/evalo gamma env e 'int v))]
+      [(fresh (e1 e2 a t v1 v2)
+         (== `(cons ,e1 ,e2) expr)
+         (== `(list ,a) type)
+         (== `(cons ,v1 ,v2) val)         
+         (!-/evalo gamma env e1 `(list ,a) v1)
+         (!-/evalo gamma env e2 a v2))]
+      [(fresh (e1 e2 t1 t2 v1 v2)
+         (== `(pair ,e1 ,e2) expr)
+         (== `(pair ,t1 ,t2) type)
+         (== `(pair ,v1 ,v2) val)
+         (!-/evalo gamma env e1 t1 v1)
+         (!-/evalo gamma env e2 t2 v2))]
+      [(fresh (e1 e2 e3 v1 v2 v3)
+         (== `(if ,e1 ,e2 ,e3) expr)
+         (!-/evalo gamma env e1 'bool v1)
+         (conde
+           [(== #t v1) (== v2 val) (!-/evalo gamma env e2 type v2)]
+           [(== #f v2) (== v3 val) (!-/evalo gamma env e3 type v3)]))]
+      [(fresh (f z e body t)
+         (== `(let-poly ((,f (lambda (,z) ,e)))
+                ,body)
+             expr)
+         (symbolo f)
+         (symbolo z)
+
+         ;; Make sure the right-hand-side of 'f' has a type, but then forget about the type.         
+         (fresh (forget-me)
+           ;; This is a call to '!-o', not a recursive call to '!-/evalo'
+           (!-o `((,f (mono ,forget-me)) . ,gamma) `(lambda (,z) ,e) forget-me))
+         
+         (!-/evalo
+          ;; Add the right-hand-side of the binding (an expression) to the environment for use later.
+          `((,f (poly ((,f (mono ,t)) . ,gamma)
+                      (lambda (,z) ,e)))
+            . ,gamma)
+          `((,f (rec (lambda (,z) ,e))) . ,env)
+          body
+          type
+          val))]
+      [(fresh (x body t t^)
+         (== `(lambda (,x) ,body) expr)
+         (symbolo x)
+         (== `(-> ,t ,t^) type)
+         (== `(closure (,x) ,body ,env) val)
+         ;; This is a call to '!-o', not a recursive call to '!-/evalo'
+         (!-o `((,x (mono ,t)) . ,gamma) body t^))]
+      [(fresh (e1 e2 t x body arg env^)
+         (== `(@ ,e1 ,e2) expr)
+         (symbolo x)
+         (!-/evalo gamma env e1 `(-> ,t ,type) `(closure (,x) ,body ,env^))
+         (!-/evalo gamma env e2 t arg)
+         (!-/evalo `((,x (mono ,t)) . ,gamma) `((,x (val ,arg)) . ,env^) body type val))])))
 
 
 (test "1"
