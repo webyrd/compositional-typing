@@ -283,6 +283,14 @@
          (symbolo f)
          (symbolo z)
 
+         ;; Make sure the right-hand-side of 'f' has a type, but then forget about the type.
+         ;;
+         ;; This is in case 'f' is not used in 'body'--we still must
+         ;; make sure the right-hand-side of 'f' has a type.
+         (fresh (forget-me)
+           ;; This is a call to '!-o', not a recursive call to '!-/evalo'
+           (!-o `((,f (mono ,forget-me)) . ,gamma) `(lambda (,z) ,e) forget-me))
+         
          (!-/evalo
           ;; Add the right-hand-side of the binding (an expression) to the environment for use later.
           `((,f (poly ((,f (mono ,t)) . ,gamma)
@@ -292,14 +300,6 @@
           body
           type
           val)
-
-         ;; Make sure the right-hand-side of 'f' has a type, but then forget about the type.
-         ;;
-         ;; This is in case 'f' is not used in 'body'--we still must
-         ;; make sure the right-hand-side of 'f' has a type.
-         (fresh (forget-me)
-           ;; This is a call to '!-o', not a recursive call to '!-/evalo'
-           (!-o `((,f (mono ,forget-me)) . ,gamma) `(lambda (,z) ,e) forget-me))
 
          )]
       [(fresh (x body t t^)
