@@ -3155,7 +3155,7 @@
 
 
 ;; stutter example taken from 'Type-and-Example-Directed Program Synthesis' by
-;; Peter-Michael and Osera Steve Zdancewic (PLDI '15)
+;; Peter-Michael Osera and Steve Zdancewic (PLDI '15)
 (time
   (test "stutter-!-o-with-stutter-1"
     (run 1 (q)
