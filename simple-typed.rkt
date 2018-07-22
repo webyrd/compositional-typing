@@ -320,7 +320,132 @@
 
 
 
+;;; Try insisting on caniconical forms in expressions.
 
+;; Assumption used in 'lookup-!-/evalo-canonical': !-/evalo-canonical extends 'gamma' and
+;; 'env' at the same time, with the same variable names, in the same
+;; order (and similarly for the initial 'gamma' and 'env', if
+;; non-empty).  Furthermore, we assume (val ,v) and (mono ,t) entries
+;; occur together, as do (rec (lambda (,z) ,e)) and
+;; (poly ,gamma^ (lambda (,z) ,e)) entries.
+(define lookup-!-/evalo-canonical
+  (lambda (gamma env x type val)
+    (fresh (y t v rest-gamma rest-env z e)
+      (symbolo x)
+      (== `((,y ,t) . ,rest-gamma) gamma)
+      (== `((,y ,v) . ,rest-env) env)
+      (symbolo y)
+      (conde
+        [(== x y)
+         (conde
+           [(== `(val ,val) v)
+            (== `(mono ,type) t)]
+           [(== `(rec (lambda (,z) ,e)) v)
+            (symbolo z)
+            (== `(closure (,z) ,e ,gamma ,env) val)
+            (fresh (gamma^)
+              (== `(poly ,gamma^ (lambda (,z) ,e)) t)
+              ;; This is a call to '!-o', not a recursive call to 'lookup-!-/evalo-canonical'
+              (!-o gamma^ `(lambda (,z) ,e) type))])]
+        [(=/= x y)
+         (lookup-!-/evalo-canonical rest-gamma rest-env x type val)]))))
+
+(define !-/evalo-canonical
+  (lambda (gamma env expr type val)
+    (conde
+      [(== #f expr) (== 'bool type) (== #f val)]
+      [(== #t expr) (== 'bool type) (== #t val)]
+      [(numbero expr) (== 'int type) (== expr val)]
+      [(== 'nil expr)
+       (== 'nil val)
+       (fresh (a)
+         (== `(list ,a) type))]
+      [(symbolo expr)
+       (=/= 'nil expr)
+       (lookup-!-/evalo-canonical gamma env expr type val)]
+      [(fresh (e a v)
+         (== `(null? ,e) expr)
+         (== 'bool type)
+         (conde
+           [(== 'nil v) (== #t val)]
+           [(=/= 'nil v) (== #f val)])
+         (!-/evalo-canonical gamma env e `(list ,a) v))]
+      [(fresh (e a b)
+         (== `(car ,e) expr)
+         (== a type)
+         (!-/evalo-canonical gamma env e `(list ,a) `(cons ,val ,b)))]
+      [(fresh (e a b)
+         (== `(cdr ,e) expr)
+         (== `(list ,a) type)
+         (!-/evalo-canonical gamma env e `(list ,a) `(cons ,b ,val)))]
+      [(fresh (e v)
+         (== `(zero? ,e) expr)
+         (conde
+           [(== 0 v) (== #t val)]
+           [(=/= 0 v) (== #f val)])
+         (== 'bool type)
+         (!-/evalo-canonical gamma env e 'int v))]
+      [(fresh (e1 e2 a t v1 v2)
+         (== `(cons ,e1 ,e2) expr)
+         (== `(list ,a) type)
+         (== `(cons ,v1 ,v2) val)
+         (!-/evalo-canonical gamma env e2 `(list ,a) v2)
+         (!-/evalo-canonical gamma env e1 a v1))]
+      [(fresh (e1 e2 t1 t2 v1 v2)
+         (== `(pair ,e1 ,e2) expr)
+         (== `(pair ,t1 ,t2) type)
+         (== `(pair ,v1 ,v2) val)
+         (!-/evalo-canonical gamma env e1 t1 v1)
+         (!-/evalo-canonical gamma env e2 t2 v2))]
+      [(fresh (e1 e2 e3 v1 v2 v3)
+         (== `(if ,e1 ,e2 ,e3) expr)
+         (!-/evalo-canonical gamma env e1 'bool v1)
+         (conde
+           [(== #t v1) (== v2 val) (!-/evalo-canonical gamma env e2 type v2)]
+           [(== #f v1) (== v3 val) (!-/evalo-canonical gamma env e3 type v3)]))]
+      [(fresh (f z e body t)
+         (== `(let-poly ((,f (lambda (,z) ,e)))
+                ,body)
+             expr)
+         (symbolo f)
+         (symbolo z)
+
+         ;; Make sure the right-hand-side of 'f' has a type, but then forget about the type.
+         ;;
+         ;; This is in case 'f' is not used in 'body'--we still must
+         ;; make sure the right-hand-side of 'f' has a type.
+         (fresh (forget-me)
+           ;; This is a call to '!-o', not a recursive call to '!-/evalo-canonical'
+           (!-o `((,f (mono ,forget-me)) . ,gamma) `(lambda (,z) ,e) forget-me))
+         
+         (!-/evalo-canonical
+          ;; Add the right-hand-side of the binding (an expression) to the environment for use later.
+          `((,f (poly ((,f (mono ,t)) . ,gamma)
+                      (lambda (,z) ,e)))
+            . ,gamma)
+          `((,f (rec (lambda (,z) ,e))) . ,env)
+          body
+          type
+          val)
+
+         )]
+      [(fresh (x body t t^)
+         (== `(lambda (,x) ,body) expr)
+         (symbolo x)
+         (== `(-> ,t ,t^) type)
+         (== `(closure (,x) ,body ,gamma ,env) val)
+         ;; This is a call to '!-o', not a recursive call to '!-/evalo-canonical'
+         (!-o `((,x (mono ,t)) . ,gamma) body t^))]
+      [(fresh (e1 e2 t x body arg gamma^ env^ some-gamma)
+         (== `(@ ,e1 ,e2) expr)
+         (symbolo x)
+
+         ;; Canonical form: disallow 'lambda' inside 'e1'
+         (absento 'lambda e1)
+         
+         (!-/evalo-canonical gamma env e1 `(-> ,t ,type) `(closure (,x) ,body ,gamma^ ,env^))
+         (!-/evalo-canonical gamma env e2 t arg)
+         (!-/evalo-canonical `((,x (mono ,t)) . ,gamma^) `((,x (val ,arg)) . ,env^) body type val))])))
 
 
 
@@ -3176,6 +3301,82 @@
                                  nil)))))))))
 
 (time
+  (test "append-!-/evalo-canonical-synthesis-with-append-e-with-hint"
+    (run 1 (q)
+      (fresh (expr type val f-body e1 e2 clos)
+        (== (list type val expr) q)
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)
+
+        ;; hint!
+        (symbolo e2)
+        
+        (== `(lambda (l1)
+               (lambda (l2)
+                 (if (null? l1)
+                     l2
+                     (cons (car l1)
+                           (@ ,e1 ,e2)))))
+            f-body)
+        (== `(let-poly ((append ,f-body))
+               (pair append
+                     (cons (@ (@ append nil) nil)
+                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (-> (list int) (list int)))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 1 (cons 2 nil))
+                               (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                                     nil))))
+            val)
+        (!-/evalo-canonical '() '() expr type val)))
+    '(((pair (-> (list int) (-> (list int) (list int)))
+             (list (list int)))
+       (pair (closure (l1)
+                      (lambda (l2)
+                        (if (null? l1)
+                            l2
+                            (cons (car l1)
+                                  (@ (@ append (cdr l1)) l2))))
+                      ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
+                                     (lambda (l1)
+                                       (lambda (l2)
+                                         (if (null? l1)
+                                             l2
+                                             (cons (car l1)
+                                                   (@ (@ append (cdr l1)) l2))))))))
+                      ((append (rec (lambda (l1)
+                                      (lambda (l2)
+                                        (if (null? l1)
+                                            l2
+                                            (cons (car l1)
+                                                  (@ (@ append (cdr l1)) l2)))))))))
+             (cons nil
+                   (cons (cons 1 (cons 2 nil))
+                         (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                               nil))))
+       (let-poly ((append (lambda (l1)
+                            (lambda (l2)
+                              (if (null? l1)
+                                  l2
+                                  (cons (car l1)
+                                        (@ (@ append (cdr l1)) l2)))))))
+         (pair append
+               (cons (@ (@ append nil) nil)
+                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                 nil)))))))))
+
+(time
   (test "append-!-/evalo-synthesis-with-append-e-with-hint"
     (run 1 (q)
       (fresh (expr type val f-body e1 e2 clos)
@@ -4129,9 +4330,153 @@
                                    (cons (@ stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
+(time
+  ;; use unique numbers for all examples
+  (test "stutter-!-/evalo-canonical-with-stutter-synthesis-2a"
+    (run 1 (q)
+      (fresh (expr type val f-body clos e)
+        (== (list type val expr) q)
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)
+        (== `(lambda (l)
+               (if (null? l)
+                     nil
+                     (cons (car l)
+                           (cons (car l)
+                                 ,e))))
+            f-body)
+        (== `(let-poly ((stutter ,f-body))
+               (pair stutter
+                     (cons (@ stutter nil)
+                           (cons (@ stutter (cons 0 nil))
+                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (list int))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 0 (cons 0 nil))
+                               (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                                     nil))))
+            val)        
+        (!-/evalo-canonical '() '() expr type val)))
+    '(((pair (-> (list int) (list int))
+             (list (list int)))
+       (pair (closure (l)
+                      (if (null? l)
+                          nil
+                          (cons (car l)
+                                (cons (car l)
+                                      (@ stutter (cdr l)))))
+                      ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
+                                      (lambda (l)
+                                        (if (null? l)
+                                            nil
+                                            (cons (car l)
+                                                  (cons (car l)
+                                                        (@ stutter (cdr l)))))))))
+                      ((stutter (rec (lambda (l)
+                                       (if (null? l)
+                                           nil
+                                           (cons (car l)
+                                                 (cons (car l)
+                                                       (@ stutter (cdr l))))))))))
+             (cons nil
+                   (cons (cons 0 (cons 0 nil))
+                         (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                               nil))))
+       (let-poly ((stutter (lambda (l)
+                             (if (null? l)
+                                 nil
+                                 (cons (car l)
+                                       (cons (car l)
+                                             (@ stutter (cdr l))))))))
+         (pair stutter (cons (@ stutter nil)
+                             (cons (@ stutter (cons 0 nil))
+                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                         nil)))))))))
+
 (printf "!!!!   none of the following tests seem to come back in a reasonable time...\n")
 
 (printf "****   these tests really should be doing better, given the type information...\n")
+
+(time
+  ;; use unique numbers for all examples
+  (test "stutter-!-/evalo-canonical-with-stutter-synthesis-3a"
+    (run 1 (q)
+      (fresh (expr type val f-body clos e1 e2)
+        (== (list type val expr) q)
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)        
+        (== `(lambda (l)
+               (if (null? l)
+                     nil
+                     (cons (car l)
+                           (cons (car ,e1)
+                                 ,e2))))
+            f-body)
+        (== `(let-poly ((stutter ,f-body))
+               (pair stutter
+                     (cons (@ stutter nil)
+                           (cons (@ stutter (cons 0 nil))
+                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (list int))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 0 (cons 0 nil))
+                               (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                                     nil))))
+            val)
+        (!-/evalo-canonical '() '() expr type val)))
+    '(((pair (-> (list int) (list int))
+             (list (list int)))
+       (pair (closure (l)
+                      (if (null? l)
+                          nil
+                          (cons (car l)
+                                (cons (car l)
+                                      (@ stutter (cdr l)))))
+                      ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
+                                      (lambda (l)
+                                        (if (null? l)
+                                            nil
+                                            (cons (car l)
+                                                  (cons (car l)
+                                                        (@ stutter (cdr l)))))))))
+                      ((stutter (rec (lambda (l)
+                                       (if (null? l)
+                                           nil
+                                           (cons (car l)
+                                                 (cons (car l)
+                                                       (@ stutter (cdr l))))))))))
+             (cons nil
+                   (cons (cons 0 (cons 0 nil))
+                         (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
+                               nil))))
+       (let-poly ((stutter (lambda (l)
+                             (if (null? l)
+                                 nil
+                                 (cons (car l)
+                                       (cons (car l)
+                                             (@ stutter (cdr l))))))))
+         (pair stutter (cons (@ stutter nil)
+                             (cons (@ stutter (cons 0 nil))
+                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                         nil)))))))))
 
 (time
   ;; use unique numbers for all examples
