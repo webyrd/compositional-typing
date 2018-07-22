@@ -2563,9 +2563,85 @@
                            (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
+(time
+  (test "append-!-/evalo-synthesis-with-append-e-with-hint"
+    (run 1 (q)
+      (fresh (expr type val f-body e1 e2 clos)
+        (== (list type val expr) q)
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)
+
+        ;; hint!
+        (symbolo e2)
+        
+        (== `(lambda (l1)
+               (lambda (l2)
+                 (if (null? l1)
+                     l2
+                     (cons (car l1)
+                           (@ ,e1 ,e2)))))
+            f-body)
+        (== `(let-poly ((append ,f-body))
+               (pair append
+                     (cons (@ (@ append nil) nil)
+                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (-> (list int) (list int)))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 1 (cons 2 nil))
+                               (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                                     nil))))
+            val)
+        (!-/evalo '() '() expr type val)))
+    '(((pair (-> (list int) (-> (list int) (list int)))
+             (list (list int)))
+       (pair (closure (l1)
+                      (lambda (l2)
+                        (if (null? l1)
+                            l2
+                            (cons (car l1)
+                                  (@ (@ append (cdr l1)) l2))))
+                      ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
+                                     (lambda (l1)
+                                       (lambda (l2)
+                                         (if (null? l1)
+                                             l2
+                                             (cons (car l1)
+                                                   (@ (@ append (cdr l1)) l2))))))))
+                      ((append (rec (lambda (l1)
+                                      (lambda (l2)
+                                        (if (null? l1)
+                                            l2
+                                            (cons (car l1)
+                                                  (@ (@ append (cdr l1)) l2)))))))))
+             (cons nil
+                   (cons (cons 1 (cons 2 nil))
+                         (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                               nil))))
+       (let-poly ((append (lambda (l1)
+                            (lambda (l2)
+                              (if (null? l1)
+                                  l2
+                                  (cons (car l1)
+                                        (@ (@ append (cdr l1)) l2)))))))
+         (pair append
+               (cons (@ (@ append nil) nil)
+                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                 nil)))))))))
+
 (printf "*** This next test takes a loooong time (if it ever comes back)!\n")
 (time
-  (test "append-!-/evalo-synthesis-with-append-e"
+  (test "append-!-/evalo-synthesis-with-append-e-without-hint"
     (run 1 (q)
       (fresh (expr type val f-body e1 e2 clos)
         (== (list type val expr) q)
