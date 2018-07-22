@@ -2563,6 +2563,7 @@
                            (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
+(printf "*** This next test takes a loooong time (if it ever comes back)!\n")
 (time
   (test "append-!-/evalo-synthesis-with-append-e"
     (run 1 (q)
@@ -2635,6 +2636,7 @@
                            (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
+(printf "*** This next test takes a very looooooooooooooong time (if it ever comes back)!\n")
 (time
   (test "append-!-/evalo-synthesis-with-append-z"
     (run 1 (q)
