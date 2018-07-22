@@ -3549,18 +3549,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 (time
   (test "stutter-evalo-with-stutter-synthesis-2"
     (run 1 (q)
