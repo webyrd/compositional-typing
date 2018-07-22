@@ -1884,7 +1884,7 @@
                                  nil)))))))))
 
 (time
- ;; swap order of calls to evalo and !-o
+  ;; swap order of calls to evalo and !-o
   (test "append-value-and-type-synthesis-with-append-c"
     (run 1 (q)
       (fresh (expr type val f-body e clos)
@@ -2085,6 +2085,78 @@
                      (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
                            (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
+
+
+(printf "**** commenting out append-value-and-type-synthesis-with-append-d test, which isn't returning\n")
+#|
+(time
+  ;; swap order of calls to evalo and !-o
+  (test "append-value-and-type-synthesis-with-append-d"
+    (run 1 (q)
+      (fresh (expr type val f-body e clos)
+        (== (list type val expr) q)
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)
+        (== `(lambda (l1)
+               (lambda (l2)
+                 (if (null? l1)
+                     l2
+                     (cons (car l1)
+                           (@ ,e l2)))))
+            f-body)
+        (== `(let-poly ((append ,f-body))
+               (pair append
+                     (cons (@ (@ append nil) nil)
+                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                       nil)))))
+            expr)
+        (== `(pair (-> (list int) (-> (list int) (list int)))
+                   (list (list int)))
+            type)
+        (== `(pair (closure . ,clos)
+                   (cons nil
+                         (cons (cons 1 (cons 2 nil))
+                               (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                                     nil))))
+            val)
+        ;; swap order of calls to evalo and !-o
+        (evalo '() expr val)
+        (!-o '() expr type)))
+    '(((pair (-> (list int) (-> (list int) (list int)))
+             (list (list int)))
+       (pair (closure (l1)
+                      (lambda (l2)
+                        (if (null? l1)
+                            l2
+                            (cons (car l1)
+                                  (@ (@ append (cdr l1)) l2))))
+                      ((append (rec (lambda (l1)
+                                      (lambda (l2)
+                                        (if (null? l1)
+                                            l2
+                                            (cons (car l1)
+                                                  (@ (@ append (cdr l1)) l2)))))))))
+             (cons nil
+                   (cons (cons 1 (cons 2 nil))
+                         (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
+                               nil))))
+       (let-poly ((append (lambda (l1)
+                            (lambda (l2)
+                              (if (null? l1)
+                                  l2
+                                  (cons (car l1)
+                                        (@ (@ append (cdr l1)) l2)))))))
+         (pair append
+               (cons (@ (@ append nil) nil)
+                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
+                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                 nil)))))))))
+|#
 
 (time
   (test "append-type-and-value-synthesis-with-append-e-with-hint"
