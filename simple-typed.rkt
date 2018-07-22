@@ -1106,20 +1106,22 @@
 (time
   (test "append-type-synthesis-with-append-a"
     (run 1 (q)
-      (fresh (expr type e)
+      (fresh (expr type f-body e)
         (== (list type expr) q)
-        (absento 1 e)
-        (absento 2 e)
-        (absento 3 e)
-        (absento 4 e)
-        (absento 5 e)
-        (absento 6 e)
-        (== `(let-poly ((append (lambda (l1)
-                                  (lambda (l2)
-                                    (if (null? l1)
-                                        l2
-                                        (cons ,e
-                                              (@ (@ append (cdr l1)) l2)))))))
+        (absento 1 f-body)
+        (absento 2 f-body)
+        (absento 3 f-body)
+        (absento 4 f-body)
+        (absento 5 f-body)
+        (absento 6 f-body)
+        (== `(lambda (l1)
+               (lambda (l2)
+                 (if (null? l1)
+                     l2
+                     (cons ,e
+                           (@ (@ append (cdr l1)) l2)))))
+            f-body)
+        (== `(let-poly ((append ,f-body))
                (pair append
                      (cons (@ (@ append nil) nil)
                            (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
