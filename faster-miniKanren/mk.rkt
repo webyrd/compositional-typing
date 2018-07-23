@@ -9,7 +9,14 @@
          conde
          symbolo numbero
          absento
-         project)
+         project
+         walk
+         state-S
+         unit
+         lambdag@
+         subst-scope
+         var
+         var?)
 
 ;; extra stuff for racket
 ;; due mostly to samth
