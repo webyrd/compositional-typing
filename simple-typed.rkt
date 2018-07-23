@@ -327,7 +327,7 @@
 
 
 
-
+;; Try to be "less dumb" by avoiding (car (cons ...)), (@ (lambda ...) ...), etc.
 
 ;; Assumption used in 'lookup-!-/evalo-less-dumb': !-/evalo-less-dumb extends 'gamma' and
 ;; 'env' at the same time, with the same variable names, in the same
