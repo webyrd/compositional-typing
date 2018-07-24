@@ -1,6 +1,10 @@
-#lang racket
+;#lang racket
 
-(require "faster-miniKanren/mk.rkt")
+;(require "faster-miniKanren/mk.rkt")
+
+(load "faster-miniKanren/mk-vicare.scm")
+(load "faster-miniKanren/mk.scm")
+
 
 (define lookupo
   (lambda (gamma x type)
@@ -43,7 +47,7 @@
            (!-o gamma e1 `(-> ,t ,type))
            (!-o gamma e2 t))]
         [(fresh (x e t t^)
-           (== `(lambda (,x) ,e) expr)
+           (== `(lambda (,x : ,t) ,e) expr)
            (symbolo x)
            (== `(-> ,t ,t^) type)
            (!-o `((,x . ,t) . ,gamma) e t^))])))
@@ -86,10 +90,20 @@
            (=/= x y)
            (unboundo rest x))]))))
 
+(define not-function-typeo
+  (lambda (t)
+    ;; IMPORTANT: will need to add extra list cases if we add other
+    ;; type constructors like cons or pair
+    (symbolo t)))
+
 (define doesnt-typeo
   (lambda (gamma expr)
      (conde
-        [(symbolo expr) (unboundo gamma expr)]
+       #|
+       ;; Uncomment to allow unbound variables
+       ;; to be a source of type errors.
+       [(symbolo expr) (unboundo gamma expr)]
+       |#
         [(fresh (e)
            (== `(zero? ,e) expr)
            (conde
@@ -122,10 +136,79 @@
                    (=/= 'int t2)
                    (!-o gamma e2 t2))]
                 [(doesnt-typeo gamma e2)])]))]
+        [(fresh (e1 e2 t t1 t2 t3)
+           (== `(,e1 ,e2) expr)
+           (conde
+             [
+              ;; case 1: e1 has a type, e2 doesn't
+              (doesnt-typeo gamma e2)
+              (!-o gamma e1 t)
+              (conde
+                [(not-function-typeo t)
+                 ;; two type errors
+                 ]
+                [
+                 ;;   1b: e1 has a function type                 
+                 (== `(-> ,t1 ,t2) t)
+                 ;; just the one type error
+                 ])]
+             [(doesnt-typeo gamma e1)
+              ;; case 2: e1 doesn't have a type
+              (conde
+                [
+                 ;;   2a: e2 has a type
+                 (!-o gamma e2 t)
+                 ;; just the one type error
+                 ]
+                [
+                 ;;   2b: e2 doesn't have a type
+                 (doesnt-typeo gamma e2)
+                 ;; two type errors
+                 ])
+              ]
+             [
+              ;; case 3: e1 and e2 have types
+              (conde
+                [
+                 ;;   3a: e1 doesn't have a function type
+                 (!-o gamma e1 t1)
+                 (!-o gamma e2 t2)
+                 (not-function-typeo t1)
+                 ]
+                [
+                 ;;   3b: e1 has a function type,
+                 ;;       but type of e2 is not consistent
+                 ;;       with type of e1
+                 (=/= t1 t3)
+                 (!-o gamma e1 `(-> ,t1 ,t2))
+                 (!-o gamma e2 t3)                                  
+                 ])
+
+              ])
+           
+
+           
+           )]
+        [(fresh (x e t)
+           (== `(lambda (,x : ,t) ,e) expr)
+           (symbolo x)
+           (doesnt-typeo `((,x . ,t) . ,gamma) e))]
         )))
 
 (run 100 (expr) (doesnt-typeo '() expr))
 
+(run 10 (e t) (doesnt-typeo '() `(lambda (y : ,t) ,e)))
+
+(run 10 (e t) (doesnt-typeo '() `(lambda (y : int) ,e)))
+
+(run 10 (expr)
+  (fresh (e e2)
+    (== `((lambda (y : int) ,e) ,e2) expr)
+    (doesnt-typeo '() expr)))
+
+(run* (t) (doesnt-typeo `((y . int)) `(zero? y)))
+
+(run* (t) (doesnt-typeo `((y . ,t)) `(zero? y)))
 
 
 
