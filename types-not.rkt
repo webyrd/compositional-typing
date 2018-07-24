@@ -112,68 +112,82 @@
        #|
        ;; Uncomment to allow unbound variables
        ;; to be a source of type errors.
-       [(symbolo expr) (unboundo gamma expr)]
+       [(symbolo expr) (unboundo gamma expr)
+       (== `(doesnt-typeo var ,gamma ,expr) proof-tree)]
        |#
-        [(fresh (e)
+        [(fresh (e proof-tree-e)
            (== `(zero? ,e) expr)
            (conde
              [(fresh (t)
                 (=/= 'int t)
-                (!-o gamma e t proof-tree))]
-             [(doesnt-typeo gamma e proof-tree)]))]
-        [(fresh (e1 e2)
+                (!-o gamma e t proof-tree-e)
+                (== `(doesnt-typeo zero? ,gamma ,expr (,proof-tree-e)) proof-tree))]
+             [(doesnt-typeo gamma e proof-tree-e)
+              (== `(doesnt-typeo zero? ,gamma ,expr (,proof-tree-e)) proof-tree)]))]
+        [(fresh (e1 e2 proof-tree-e1 proof-tree-e2)
            (== `(+ ,e1 ,e2) expr)
            (conde
-             [(!-o gamma e1 'int proof-tree)
+             [(!-o gamma e1 'int proof-tree-e1)
               (conde
                 [(fresh (t2)
                    (=/= 'int t2)
-                   (!-o gamma e2 t2 proof-tree))]
-                [(doesnt-typeo gamma e2 proof-tree)])]
+                   (!-o gamma e2 t2 proof-tree-e2)
+                   (== `(doesnt-typeo + ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree))]
+                [(doesnt-typeo gamma e2 proof-tree-e2)
+                 (== `(doesnt-typeo + ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)])]
              [(fresh (t1)
                 (=/= 'int t1)
-                (!-o gamma e1 t1 proof-tree)
+                (!-o gamma e1 t1 proof-tree-e1)
                 (conde
-                  [(!-o gamma e2 'int proof-tree)]
+                  [(!-o gamma e2 'int proof-tree-e2)
+                   (== `(doesnt-typeo + ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)]
                   [(fresh (t2)
                      (=/= 'int t2)
-                     (!-o gamma e2 t2 proof-tree))]
-                  [(doesnt-typeo gamma e2 proof-tree)]))]
-             [(doesnt-typeo gamma e1 proof-tree)
+                     (!-o gamma e2 t2 proof-tree-e2)
+                     (== `(doesnt-typeo + ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree))]
+                  [(doesnt-typeo gamma e2 proof-tree-e2)
+                   (== `(doesnt-typeo + ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)]))]
+             [(doesnt-typeo gamma e1 proof-tree-e1)
               (conde
-                [(!-o gamma e2 'int proof-tree)]
+                [(!-o gamma e2 'int proof-tree-e2)
+                 (== `(doesnt-typeo + ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)]
                 [(fresh (t2)
                    (=/= 'int t2)
-                   (!-o gamma e2 t2 proof-tree))]
-                [(doesnt-typeo gamma e2 proof-tree)])]))]
-        [(fresh (e1 e2 t t1 t2 t3)
+                   (!-o gamma e2 t2 proof-tree-e2)
+                   (== `(doesnt-typeo + ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree))]
+                [(doesnt-typeo gamma e2 proof-tree-e2)
+                 (== `(doesnt-typeo + ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)])]))]
+        [(fresh (e1 e2 t t1 t2 t3 proof-tree-e1 proof-tree-e2)
            (== `(,e1 ,e2) expr)
            (conde
              [
               ;; case 1: e1 has a type, e2 doesn't
-              (doesnt-typeo gamma e2 proof-tree)
-              (!-o gamma e1 t proof-tree)
+              (doesnt-typeo gamma e2 proof-tree-e2)
+              (!-o gamma e1 t proof-tree-e1)
               (conde
                 [(not-function-typeo t)
                  ;; two type errors
-                 ]
+                 (== `(doesnt-typeo app ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)]
                 [
                  ;;   1b: e1 has a function type                 
                  (== `(-> ,t1 ,t2) t)
                  ;; just the one type error
+                 (== `(doesnt-typeo app ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)
                  ])]
-             [(doesnt-typeo gamma e1 proof-tree)
+             [(doesnt-typeo gamma e1 proof-tree-e1)
               ;; case 2: e1 doesn't have a type
               (conde
                 [
                  ;;   2a: e2 has a type
-                 (!-o gamma e2 t proof-tree)
+                 (!-o gamma e2 t proof-tree-e2)
                  ;; just the one type error
+                 (== `(doesnt-typeo app ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)
                  ]
                 [
                  ;;   2b: e2 doesn't have a type
-                 (doesnt-typeo gamma e2 proof-tree)
+                 (doesnt-typeo gamma e2 proof-tree-e2)
                  ;; two type errors
+                 (== `(doesnt-typeo app ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)
                  ])
               ]
              [
@@ -181,28 +195,27 @@
               (conde
                 [
                  ;;   3a: e1 doesn't have a function type
-                 (!-o gamma e1 t1 proof-tree)
-                 (!-o gamma e2 t2 proof-tree)
+                 (!-o gamma e1 t1 proof-tree-e1)
+                 (!-o gamma e2 t2 proof-tree-e2)
                  (not-function-typeo t1)
+                 (== `(doesnt-typeo app ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)
                  ]
                 [
                  ;;   3b: e1 has a function type,
                  ;;       but type of e2 is not consistent
                  ;;       with type of e1
                  (=/= t1 t3)
-                 (!-o gamma e1 `(-> ,t1 ,t2) proof-tree)
-                 (!-o gamma e2 t3 proof-tree)                  
+                 (!-o gamma e1 `(-> ,t1 ,t2) proof-tree-e1)
+                 (!-o gamma e2 t3 proof-tree-e2)
+                 (== `(doesnt-typeo app ,gamma ,expr (,proof-tree-e1 ,proof-tree-e2)) proof-tree)
                  ])
-
-              ])
-           
-
-           
+              ])                      
            )]
-        [(fresh (x e t)
+        [(fresh (x e t proof-tree-e)
            (== `(lambda (,x : ,t) ,e) expr)
            (symbolo x)
-           (doesnt-typeo `((,x . ,t) . ,gamma) e proof-tree))]
+           (doesnt-typeo `((,x . ,t) . ,gamma) e proof-tree-e)
+           (== `(doesnt-typeo abs ,gamma ,expr (,proof-tree-e)) proof-tree))]
         )))
 
 (run 100 (expr proof-tree) (doesnt-typeo '() expr proof-tree))
