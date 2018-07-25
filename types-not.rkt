@@ -2,6 +2,16 @@
 
 (require "faster-miniKanren/mk.rkt")
 
+(define-syntax test
+  (syntax-rules ()
+    ((_ title tested-expression expected-result)
+     (begin
+       (printf "Testing ~s\n" title)
+       (let* ((expected expected-result)
+              (produced tested-expression))
+         (unless (equal? expected produced)
+           (printf "Failed: ~a~%Expected: ~a~%Computed: ~a~%" 'tested-expression expected produced)
+           (error 'test "")))))))
 
 (define lookupo
   (lambda (gamma x type)
@@ -234,13 +244,30 @@
 (run* (q proof-tree)
   (doesnt-typeo '() `(+ #f 5) proof-tree))
 
-;; argument ill-typed
-(run* (proof-tree)
+(test "argument ill-typed"
+  (run* (proof-tree)
     (fresh (expr e e2)
       (== `((lambda (y : int)
               5)
             (zero? #f)) expr)
       (doesnt-typeo '() expr proof-tree)))
+  '((doesnt-typeo app
+                  (e1-has-function-type e2-no-type)
+                  ()
+                  ((lambda (y : int) 5) (zero? #f))
+                  ((!-o abs
+                        ()
+                        (lambda (y : int) 5)
+                        (-> int int)
+                        ((!-o num ((y . int)) 5 int)))
+                   (doesnt-typeo zero?
+                                 (arg-not-an-int)
+                                 ()
+                                 (zero? #f)
+                                 ((!-o #f
+                                       ()
+                                       #f
+                                       bool)))))))
 
 ;; both sides ill-typed
 (run* (proof-tree)
