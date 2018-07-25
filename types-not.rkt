@@ -1,9 +1,6 @@
-;#lang racket
+#lang racket
 
-;(require "faster-miniKanren/mk.rkt")
-
-(load "faster-miniKanren/mk-vicare.scm")
-(load "faster-miniKanren/mk.scm")
+(require "faster-miniKanren/mk.rkt")
 
 
 (define lookupo
