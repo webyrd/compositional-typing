@@ -237,6 +237,22 @@
 (run* (q proof-tree)
   (doesnt-typeo '() `(+ #f 5) proof-tree))
 
+;; argument ill-typed
+(run* (proof-tree)
+    (fresh (expr e e2)
+      (== `((lambda (y : int)
+              5)
+            (zero? #f)) expr)
+      (doesnt-typeo '() expr proof-tree)))
+
+;; both sides ill-typed
+(run* (proof-tree)
+    (fresh (expr e e2)
+      (== `((lambda (y : int)
+              (+ y #t))
+            (zero? #f)) expr)
+      (doesnt-typeo '() expr proof-tree)))
+
 ;; alternative approach, based on inferring the wrong type for an expression
 
 #|
