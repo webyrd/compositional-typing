@@ -109,7 +109,7 @@
          (== `(-> ,t ,t^) type)
          (!-o `((,x (mono ,t)) . ,gamma) body t^))]
       [(fresh (e1 e2 t)
-         (== `(@ ,e1 ,e2) expr)
+         (== `(,e1 ,e2) expr)
          (!-o gamma e1 `(-> ,t ,type))
          (!-o gamma e2 t))])))
 
@@ -187,7 +187,7 @@
          (symbolo x)
          (== `(closure (,x) ,body ,env) val))]
       [(fresh (e1 e2 x body arg env^)
-         (== `(@ ,e1 ,e2) expr)
+         (== `(,e1 ,e2) expr)
          (symbolo x)
          (evalo env e1 `(closure (,x) ,body ,env^))
          (evalo env e2 arg)
@@ -316,7 +316,7 @@
          ;; This is a call to '!-o', not a recursive call to '!-/evalo'
          (!-o `((,x (mono ,t)) . ,gamma) body t^))]
       [(fresh (e1 e2 t x body arg gamma^ env^ some-gamma)
-         (== `(@ ,e1 ,e2) expr)
+         (== `(,e1 ,e2) expr)
          (symbolo x)
          (!-/evalo gamma env e1 `(-> ,t ,type) `(closure (,x) ,body ,gamma^ ,env^))
          (!-/evalo gamma env e2 t arg)
@@ -501,7 +501,7 @@
          ;; This is a call to '!-o', not a recursive call to '!-/evalo-dynamic-application'
          (!-o `((,x (mono ,t)) . ,gamma) body t^))]
       [(fresh (e1 e2 t x body arg gamma^ env^ some-gamma)
-         (== `(@ ,e1 ,e2) expr)
+         (== `(,e1 ,e2) expr)
          (symbolo x)
          (!-/evalo-dynamic-application gamma env e1 `(-> ,t ,type) `(closure (,x) ,body ,gamma^ ,env^))
 
@@ -522,7 +522,7 @@
 
 
 
-;; Try to be "less dumb" by avoiding (car (cons ...)), (@ (lambda ...) ...), etc.
+;; Try to be "less dumb" by avoiding (car (cons ...)), ((lambda ...) ...), etc.
 
 ;; Assumption used in 'lookup-!-/evalo-less-dumb': !-/evalo-less-dumb extends 'gamma' and
 ;; 'env' at the same time, with the same variable names, in the same
@@ -655,7 +655,7 @@
          ;; This is a call to '!-o', not a recursive call to '!-/evalo-less-dumb'
          (!-o `((,x (mono ,t)) . ,gamma) body t^))]
       [(fresh (e1 e2 t x body arg gamma^ env^ some-gamma)
-         (== `(@ ,e1 ,e2) expr)
+         (== `(,e1 ,e2) expr)
          (symbolo x)
 
          ;; be less dumb (hopefully)
@@ -795,7 +795,7 @@
          ;; This is a call to '!-o', not a recursive call to '!-/evalo-canonical'
          (!-o `((,x (mono ,t)) . ,gamma) body t^))]
       [(fresh (e1 e2 t x body arg gamma^ env^ some-gamma)
-         (== `(@ ,e1 ,e2) expr)
+         (== `(,e1 ,e2) expr)
          (symbolo x)
 
          ;; Canonical form: disallow 'lambda' inside 'e1'
@@ -953,7 +953,7 @@
 
          )]
       [(fresh (e1 e2 t x body arg gamma^ env^ some-gamma)
-         (== `(@ ,e1 ,e2) expr)
+         (== `(,e1 ,e2) expr)
          (symbolo x)
          (!-/evalo-lazy-aux gamma env e1 `(-> ,t ,type) `(closure (,x) ,body ,gamma^ ,env^))
          (!-/evalo-lazy-aux gamma env e2 t arg)
@@ -977,13 +977,13 @@
               (lambda (s)
                 (if ,q
                     ,r
-                    (,s (car l) (@ (@ append (cdr l)) s)))))
+                    (,s (car l) ((append (cdr l)) s)))))
            prog)
        (evalo '()
               `(let-poly ((append ,prog))
-                 (cons (@ (@ append nil) nil)
-                       (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                             (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                 (cons ((append nil) nil)
+                       (cons ((append (cons 1 nil)) (cons 2 nil))
+                             (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                    nil))))
               '(cons nil
                      (cons (cons 1 (cons 2 nil))
@@ -993,7 +993,7 @@
        (lambda (s)
          (if (null? l)
              s
-             (cons (car l) (@ (@ append (cdr l)) s))))))))
+             (cons (car l) ((append (cdr l)) s))))))))
 
 (time
  (test "append-infer-and-eval-curried-cons-no-list-14"
@@ -1009,12 +1009,12 @@
               (lambda (s)
                 (if ,q
                     ,r
-                    (,s (car l) (@ (@ append (cdr l)) s)))))
+                    (,s (car l) ((append (cdr l)) s)))))
            prog)
        (== `(let-poly ((append ,prog))
-                 (cons (@ (@ append nil) nil)
-                       (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                             (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                 (cons ((append nil) nil)
+                       (cons ((append (cons 1 nil)) (cons 2 nil))
+                             (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                    nil))))
            expr)
        (!-o '()
@@ -1030,7 +1030,7 @@
        (lambda (s)
          (if (null? l)
              s
-             (cons (car l) (@ (@ append (cdr l)) s))))))))
+             (cons (car l) ((append (cdr l)) s))))))))
 
 (time
  (test "append-infer-and-eval-curried-cons-no-list-with-append-14"
@@ -1046,13 +1046,13 @@
               (lambda (s)
                 (if ,q
                     ,r
-                    (,s (car l) (@ (@ append (cdr l)) s)))))
+                    (,s (car l) ((append (cdr l)) s)))))
            prog)
        (== `(let-poly ((append ,prog))
               (pair append
-                    (cons (@ (@ append nil) nil)
-                          (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                    (cons ((append nil) nil)
+                          (cons ((append (cons 1 nil)) (cons 2 nil))
+                                (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                       nil)))))
            expr)
        (!-o '()
@@ -1066,7 +1066,7 @@
                            (cons (cons 1 (cons 2 nil))
                                  (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
                                        nil)))))))
-   '((lambda (l) (lambda (s) (if (null? l) s (cons (car l) (@ (@ append (cdr l)) s))))))))
+   '((lambda (l) (lambda (s) (if (null? l) s (cons (car l) ((append (cdr l)) s))))))))
 
 (time
  (test "append-eval-only-curried-cons-no-list-15"
@@ -1082,13 +1082,13 @@
                (lambda (s)
                  (if ,q
                      ,r
-                     (,s (car l) (@ (@ append ,t) s)))))
+                     (,s (car l) ((append ,t) s)))))
             prog)
         (evalo '()
                `(let-poly ((append ,prog))
-                  (cons (@ (@ append nil) nil)
-                        (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                              (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                  (cons ((append nil) nil)
+                        (cons ((append (cons 1 nil)) (cons 2 nil))
+                              (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                     nil))))
                '(cons nil
                       (cons (cons 1 (cons 2 nil))
@@ -1098,9 +1098,9 @@
       (lambda (s)
         (if (null? l)
             s
-            (cons (car l) (@ (@ append (cdr l)) s))))))))
+            (cons (car l) ((append (cdr l)) s))))))))
 
-#|
+
 (time
  (test "append-infer-and-eval-curried-cons-no-list-with-append-15"
    (run 1 (prog)
@@ -1115,13 +1115,13 @@
               (lambda (s)
                 (if ,q
                     ,r
-                    (,s (car l) (@ (@ append ,t) s)))))
+                    (,s (car l) ((append ,t) s)))))
            prog)
        (== `(let-poly ((append ,prog))
               (pair append
-                    (cons (@ (@ append nil) nil)
-                          (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                    (cons ((append nil) nil)
+                          (cons ((append (cons 1 nil)) (cons 2 nil))
+                                (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                       nil)))))
            expr)
        (!-o '()
@@ -1135,10 +1135,9 @@
                            (cons (cons 1 (cons 2 nil))
                                  (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
                                        nil)))))))
-   '((lambda (l) (lambda (s) (if (null? l) s (cons (car l) (@ (@ append (cdr l)) s))))))))
-|#
+   '((lambda (l) (lambda (s) (if (null? l) s (cons (car l) ((append (cdr l)) s))))))))
 
-#|
+
 (time
  (test "append-eval-only-curried-cons-no-list-15.5"
    (run 1 (prog)
@@ -1153,13 +1152,13 @@
                (lambda (s)
                  (if ,q
                      ,r
-                     (,s (car l) (@ ,t s)))))
+                     (,s (car l) (,t s)))))
             prog)
         (evalo '()
                `(let-poly ((append ,prog))
-                  (cons (@ (@ append nil) nil)
-                        (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                              (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                  (cons ((append nil) nil)
+                        (cons ((append (cons 1 nil)) (cons 2 nil))
+                              (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                     nil))))
                '(cons nil
                       (cons (cons 1 (cons 2 nil))
@@ -1169,8 +1168,8 @@
       (lambda (s)
         (if (null? l)
             s
-            (cons (car l) (@ (@ append (cdr l)) s))))))))
-|#
+            (cons (car l) ((append (cdr l)) s))))))))
+
 
 #|
 (time
@@ -1191,9 +1190,9 @@
             prog)
         (evalo '()
                `(let-poly ((append ,prog))
-                  (cons (@ (@ append nil) nil)
-                        (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                              (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                  (cons ((append nil) nil)
+                        (cons ((append (cons 1 nil)) (cons 2 nil))
+                              (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                     nil))))
                '(cons nil
                       (cons (cons 1 (cons 2 nil))
@@ -1203,7 +1202,7 @@
       (lambda (s)
         (if (null? l)
             s
-            (cons (car l) (@ (@ append (cdr l)) s))))))))
+            (cons (car l) ((append (cdr l)) s))))))))
 |#
 
 #|
@@ -1223,9 +1222,9 @@
             prog)
         (evalo '()
                `(let-poly ((append ,prog))
-                  (cons (@ (@ append nil) nil)
-                        (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                              (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                  (cons ((append nil) nil)
+                        (cons ((append (cons 1 nil)) (cons 2 nil))
+                              (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                     nil))))
                '(cons nil
                       (cons (cons 1 (cons 2 nil))
@@ -1235,7 +1234,7 @@
       (lambda (s)
         (if (null? l)
             s
-            (cons (car l) (@ (@ append (cdr l)) s))))))))
+            (cons (car l) ((append (cdr l)) s))))))))
 |#
 
 (test "reverse-forward"
@@ -1245,15 +1244,15 @@
                                  (lambda (s)
                                    (if (null? l) s
                                        (cons (car l)
-                                             (@ (@ append (cdr l)) s)))))))
+                                             ((append (cdr l)) s)))))))
               (let-poly ((reverse (lambda (xs)
                                     (if (null? xs)
                                         nil
-                                        (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil))))))
-                (cons (@ reverse nil)
-                      (cons (@ reverse (cons 1 nil))
-                            (cons (@ reverse (cons 2 (cons 3 nil)))
-                                  (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                                        ((append (reverse (cdr xs))) (cons (car xs) nil))))))
+                (cons (reverse nil)
+                      (cons (reverse (cons 1 nil))
+                            (cons (reverse (cons 2 (cons 3 nil)))
+                                  (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                         nil))))))
            q))    
   '((cons nil (cons (cons 1 nil) (cons (cons 3 (cons 2 nil)) (cons (cons 6 (cons 5 (cons 4 nil))) nil))))))
@@ -1271,7 +1270,7 @@
       (== `(lambda (xs)
              (if (null? xs)
                  nil
-                 (@ (@ ,q (@ reverse ,r)) ,s)))
+                 ((,q (reverse ,r)) ,s)))
           defn)
          
       (== 'append q)
@@ -1283,18 +1282,18 @@
                                    (lambda (s)
                                      (if (null? l) s
                                          (cons (car l)
-                                               (@ (@ append (cdr l)) s)))))))
+                                               ((append (cdr l)) s)))))))
                 (let-poly ((reverse ,defn))
-                  (cons (@ reverse nil)
-                        (cons (@ reverse (cons 1 nil))
-                              (cons (@ reverse (cons 2 (cons 3 nil)))
-                                    (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                  (cons (reverse nil)
+                        (cons (reverse (cons 1 nil))
+                              (cons (reverse (cons 2 (cons 3 nil)))
+                                    (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                           nil))))))
              '(cons nil (cons (cons 1 nil) (cons (cons 3 (cons 2 nil)) (cons (cons 6 (cons 5 (cons 4 nil))) nil)))))))    
   '((lambda (xs)
        (if (null? xs)
            nil
-           (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil))))))
+           ((append (reverse (cdr xs))) (cons (car xs) nil))))))
 
 (test "reverse-illtyped-hole-synthesis-1a"
   (run 1 (defn)
@@ -1309,7 +1308,7 @@
       (== `(lambda (xs)
              (if (null? xs)
                  nil
-                 (@ (@ (lambda (l) (lambda (s) (@ (@ append l) s))) (@ reverse (cdr xs))) (cons (car xs) nil))))
+                 (((lambda (l) (lambda (s) ((append l) s))) (reverse (cdr xs))) (cons (car xs) nil))))
           defn)
       
       (evalo '()
@@ -1317,19 +1316,20 @@
                                    (lambda (s)
                                      (if (null? l) s
                                          (cons (car l)
-                                               (@ (@ append (cdr l)) s)))))))
+                                               ((append (cdr l)) s)))))))
                 (let-poly ((reverse ,defn))
-                  (cons (@ reverse nil)
-                        (cons (@ reverse (cons 1 nil))
-                              (cons (@ reverse (cons 2 (cons 3 nil)))
-                                    (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                  (cons (reverse nil)
+                        (cons (reverse (cons 1 nil))
+                              (cons (reverse (cons 2 (cons 3 nil)))
+                                    (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                           nil))))))
              '(cons nil (cons (cons 1 nil) (cons (cons 3 (cons 2 nil)) (cons (cons 6 (cons 5 (cons 4 nil))) nil)))))))    
   '((lambda (xs)
        (if (null? xs)
            nil
-           (@ (@ (lambda (l) (lambda (s) (@ (@ append l) s))) (@ reverse (cdr xs))) (cons (car xs) nil))))))
+           (((lambda (l) (lambda (s) ((append l) s))) (reverse (cdr xs))) (cons (car xs) nil))))))
 
+#|
 (time
   (test "reverse-illtyped-simple-hole-synthesis-1e-with-type-only"
     (run 1 (defn)
@@ -1344,19 +1344,19 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse (cdr xs))) ,q)))
+                   ((append (reverse (cdr xs))) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
-                 (cons (@ reverse nil)
-                       (cons (@ reverse (cons 1 nil))
-                             (cons (@ reverse (cons 2 (cons 3 nil)))
-                                   (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                 (cons (reverse nil)
+                       (cons (reverse (cons 1 nil))
+                             (cons (reverse (cons 2 (cons 3 nil)))
+                                   (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                          nil))))))
             prog)
 
@@ -1366,7 +1366,8 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) nil))))))
+            ((append (reverse (cdr xs))) nil))))))
+|#
 
 (time
   (test "reverse-illtyped-simple-hole-synthesis-1e-with-type-and-eval"
@@ -1382,19 +1383,19 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse (cdr xs))) ,q)))
+                   ((append (reverse (cdr xs))) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
-                 (cons (@ reverse nil)
-                       (cons (@ reverse (cons 1 nil))
-                             (cons (@ reverse (cons 2 (cons 3 nil)))
-                                   (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                 (cons (reverse nil)
+                       (cons (reverse (cons 1 nil))
+                             (cons (reverse (cons 2 (cons 3 nil)))
+                                   (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                          nil))))))
             prog)
 
@@ -1407,8 +1408,9 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil)))))))
+            ((append (reverse (cdr xs))) (cons (car xs) nil)))))))
 
+#|
 (time
   (test "reverse-illtyped-simple-hole-synthesis-1e-eval-only"
     (run 1 (defn)
@@ -1423,19 +1425,19 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse (cdr xs))) ,q)))
+                   ((append (reverse (cdr xs))) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
-                 (cons (@ reverse nil)
-                       (cons (@ reverse (cons 1 nil))
-                             (cons (@ reverse (cons 2 (cons 3 nil)))
-                                   (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                 (cons (reverse nil)
+                       (cons (reverse (cons 1 nil))
+                             (cons (reverse (cons 2 (cons 3 nil)))
+                                   (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                          nil))))))
             prog)
 
@@ -1445,7 +1447,8 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil)))))))
+            ((append (reverse (cdr xs))) (cons (car xs) nil)))))))
+|#
 
 (time
   (test "reverse-illtyped-simple-hole-synthesis-1f-with-type-and-eval"
@@ -1461,19 +1464,19 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse (cdr ,r))) ,q)))
+                   ((append (reverse (cdr ,r))) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
-                 (cons (@ reverse nil)
-                       (cons (@ reverse (cons 1 nil))
-                             (cons (@ reverse (cons 2 (cons 3 nil)))
-                                   (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                 (cons (reverse nil)
+                       (cons (reverse (cons 1 nil))
+                             (cons (reverse (cons 2 (cons 3 nil)))
+                                   (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                          nil))))))
             prog)
 
@@ -1486,7 +1489,7 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil)))))))
+            ((append (reverse (cdr xs))) (cons (car xs) nil)))))))
 
 #|
 (time
@@ -1503,19 +1506,19 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse (cdr ,r))) ,q)))
+                   ((append (reverse (cdr ,r))) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
-                 (cons (@ reverse nil)
-                       (cons (@ reverse (cons 1 nil))
-                             (cons (@ reverse (cons 2 (cons 3 nil)))
-                                   (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                 (cons (reverse nil)
+                       (cons (reverse (cons 1 nil))
+                             (cons (reverse (cons 2 (cons 3 nil)))
+                                   (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                          nil))))))
             prog)
 
@@ -1525,7 +1528,7 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil)))))))
+            ((append (reverse (cdr xs))) (cons (car xs) nil)))))))
 |#
 
 (time
@@ -1542,19 +1545,19 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse (,s ,r))) ,q)))
+                   ((append (reverse (,s ,r))) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
-                 (cons (@ reverse nil)
-                       (cons (@ reverse (cons 1 nil))
-                             (cons (@ reverse (cons 2 (cons 3 nil)))
-                                   (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                 (cons (reverse nil)
+                       (cons (reverse (cons 1 nil))
+                             (cons (reverse (cons 2 (cons 3 nil)))
+                                   (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                          nil))))))
             prog)
 
@@ -1567,7 +1570,7 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil)))))))
+            ((append (reverse (cdr xs))) (cons (car xs) nil)))))))
 
 #|
 (time
@@ -1584,19 +1587,19 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse (,s ,r))) ,q)))
+                   ((append (reverse (,s ,r))) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
-                 (cons (@ reverse nil)
-                       (cons (@ reverse (cons 1 nil))
-                             (cons (@ reverse (cons 2 (cons 3 nil)))
-                                   (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                 (cons (reverse nil)
+                       (cons (reverse (cons 1 nil))
+                             (cons (reverse (cons 2 (cons 3 nil)))
+                                   (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                          nil))))))
             prog)
 
@@ -1606,7 +1609,7 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil)))))))
+            ((append (reverse (cdr xs))) (cons (car xs) nil)))))))
 |#
 
 (time
@@ -1623,20 +1626,20 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse (,s ,r))) ,q)))
+                   ((append (reverse (,s ,r))) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
                  (pair reverse
-                       (cons (@ reverse nil)
-                             (cons (@ reverse (cons 1 nil))
-                                   (cons (@ reverse (cons 2 (cons 3 nil)))
-                                         (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                       (cons (reverse nil)
+                             (cons (reverse (cons 1 nil))
+                                   (cons (reverse (cons 2 (cons 3 nil)))
+                                         (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                                nil)))))))
             prog)
 
@@ -1651,7 +1654,7 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil)))))))
+            ((append (reverse (cdr xs))) (cons (car xs) nil)))))))
 
 (time
   (test "reverse-illtyped-simple-hole-synthesis-1h-with-type-and-eval"
@@ -1667,19 +1670,19 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse ,r)) ,q)))
+                   ((append (reverse ,r)) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
-                 (cons (@ reverse nil)
-                       (cons (@ reverse (cons 1 nil))
-                             (cons (@ reverse (cons 2 (cons 3 nil)))
-                                   (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                 (cons (reverse nil)
+                       (cons (reverse (cons 1 nil))
+                             (cons (reverse (cons 2 (cons 3 nil)))
+                                   (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                          nil))))))
             prog)
 
@@ -1692,7 +1695,7 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil)))))))
+            ((append (reverse (cdr xs))) (cons (car xs) nil)))))))
 
 (time
   (test "reverse-illtyped-simple-hole-synthesis-1e-with-eval-only"
@@ -1708,19 +1711,19 @@
         (== `(lambda (xs)
                (if (null? xs)
                    nil
-                   (@ (@ append (@ reverse (cdr xs))) ,q)))
+                   ((append (reverse (cdr xs))) ,q)))
             defn)
 
         (== `(let-poly ((append (lambda (l)
                                   (lambda (s)
                                     (if (null? l) s
                                         (cons (car l)
-                                              (@ (@ append (cdr l)) s)))))))
+                                              ((append (cdr l)) s)))))))
                (let-poly ((reverse ,defn))
-                 (cons (@ reverse nil)
-                       (cons (@ reverse (cons 1 nil))
-                             (cons (@ reverse (cons 2 (cons 3 nil)))
-                                   (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                 (cons (reverse nil)
+                       (cons (reverse (cons 1 nil))
+                             (cons (reverse (cons 2 (cons 3 nil)))
+                                   (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                          nil))))))
             prog)
 
@@ -1730,7 +1733,7 @@
     '((lambda (xs)
         (if (null? xs)
             nil
-            (@ (@ append (@ reverse (cdr xs))) (cons (car xs) nil)))))))
+            ((append (reverse (cdr xs))) (cons (car xs) nil)))))))
 
 (test "reverse-illtyped-hole-synthesis-1b"
   (run 1 (defn)
@@ -1745,7 +1748,7 @@
       (== `(lambda (xs)
              (if (null? xs)
                  nil
-                 (@ (@ (lambda (l) (lambda (s) (cons l s))) (@ reverse (cdr xs))) (cons (car xs) nil))))
+                 (((lambda (l) (lambda (s) (cons l s))) (reverse (cdr xs))) (cons (car xs) nil))))
           defn)
       
       (evalo '()
@@ -1753,12 +1756,12 @@
                                    (lambda (s)
                                      (if (null? l) s
                                          (cons (car l)
-                                               (@ (@ append (cdr l)) s)))))))
+                                               ((append (cdr l)) s)))))))
                 (let-poly ((reverse ,defn))
-                  (cons (@ reverse nil)
-                        (cons (@ reverse (cons 1 nil))
-                              (cons (@ reverse (cons 2 (cons 3 nil)))
-                                    (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                  (cons (reverse nil)
+                        (cons (reverse (cons 1 nil))
+                              (cons (reverse (cons 2 (cons 3 nil)))
+                                    (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                           nil))))))
              '(cons nil (cons (cons 1 nil) (cons (cons 3 (cons 2 nil)) (cons (cons 6 (cons 5 (cons 4 nil))) nil)))))))    
   '())
@@ -1776,20 +1779,20 @@
       (== `(lambda (xs)
              (if (null? xs)
                  nil
-                 (@ (@ (lambda (l) (lambda (s) (cons l s))) (@ reverse (cdr xs))) (cons (car xs) nil))))
+                 (((lambda (l) (lambda (s) (cons l s))) (reverse (cdr xs))) (cons (car xs) nil))))
           defn)
 
       (== `(let-poly ((append (lambda (l)
                                 (lambda (s)
                                   (if (null? l) s
                                       (cons (car l)
-                                            (@ (@ append (cdr l)) s)))))))
+                                            ((append (cdr l)) s)))))))
              (let-poly ((reverse ,defn))
                (pair reverse
-                     (cons (@ reverse nil)
-                           (cons (@ reverse (cons 1 nil))
-                                 (cons (@ reverse (cons 2 (cons 3 nil)))
-                                       (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                     (cons (reverse nil)
+                           (cons (reverse (cons 1 nil))
+                                 (cons (reverse (cons 2 (cons 3 nil)))
+                                       (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                              nil)))))))
           prog)
       
@@ -1813,25 +1816,25 @@
       (absento 5 defn)
       (absento 6 defn)
 
-      ;;(== '(@ (@ append l) s) q)
+      ;;(== '((append l) s) q)
       
       (== `(lambda (xs)
              (if (null? xs)
                  nil
-                 (@ (@ (lambda (l) (lambda (s) ,q)) (@ reverse (cdr xs))) (cons (car xs) nil))))
+                 (((lambda (l) (lambda (s) ,q)) (reverse (cdr xs))) (cons (car xs) nil))))
           defn)
 
       (== `(let-poly ((append (lambda (l)
                                 (lambda (s)
                                   (if (null? l) s
                                       (cons (car l)
-                                            (@ (@ append (cdr l)) s)))))))
+                                            ((append (cdr l)) s)))))))
              (let-poly ((reverse ,defn))
                (pair reverse
-                     (cons (@ reverse nil)
-                           (cons (@ reverse (cons 1 nil))
-                                 (cons (@ reverse (cons 2 (cons 3 nil)))
-                                       (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                     (cons (reverse nil)
+                           (cons (reverse (cons 1 nil))
+                                 (cons (reverse (cons 2 (cons 3 nil)))
+                                       (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                              nil)))))))
           prog)
 
@@ -1847,7 +1850,7 @@
                                 (cons (cons 3 (cons 2 nil))
                                       (cons (cons 6 (cons 5 (cons 4 nil)))
                                             nil))))))))    
-  '((lambda (xs) (if (null? xs) nil (@ (@ (lambda (l) (lambda (s) (@ (@ append l) s))) (@ reverse (cdr xs))) (cons (car xs) nil))))))
+  '((lambda (xs) (if (null? xs) nil (((lambda (l) (lambda (s) ((append l) s))) (reverse (cdr xs))) (cons (car xs) nil))))))
 
 (test "reverse-illtyped-hole-synthesis-1d"
   (run 1 (defn)
@@ -1862,19 +1865,19 @@
       (== `(lambda (xs)
              (if (null? xs)
                  nil
-                 (@ (@ (lambda (l) (lambda (s) ,q)) (@ reverse (cdr xs))) (cons (car xs) nil))))
+                 (((lambda (l) (lambda (s) ,q)) (reverse (cdr xs))) (cons (car xs) nil))))
           defn)
 
       (== `(let-poly ((append (lambda (l)
                                 (lambda (s)
                                   (if (null? l) s
                                       (cons (car l)
-                                            (@ (@ append (cdr l)) s)))))))
+                                            ((append (cdr l)) s)))))))
              (let-poly ((reverse ,defn))
-               (cons (@ reverse nil)
-                     (cons (@ reverse (cons 1 nil))
-                           (cons (@ reverse (cons 2 (cons 3 nil)))
-                                 (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+               (cons (reverse nil)
+                     (cons (reverse (cons 1 nil))
+                           (cons (reverse (cons 2 (cons 3 nil)))
+                                 (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                        nil))))))
           prog)
 
@@ -1899,7 +1902,7 @@
       (== `(lambda (xs)
              (if (null? xs)
                  nil
-                 (@ (@ (lambda (l) (lambda (s) ,q)) (@ reverse (cdr xs))) (cons (car xs) nil))))
+                 (((lambda (l) (lambda (s) ,q)) (reverse (cdr xs))) (cons (car xs) nil))))
           defn)
       
       (evalo '()
@@ -1907,12 +1910,12 @@
                                    (lambda (s)
                                      (if (null? l) s
                                          (cons (car l)
-                                               (@ (@ append (cdr l)) s)))))))
+                                               ((append (cdr l)) s)))))))
                 (let-poly ((reverse ,defn))
-                  (cons (@ reverse nil)
-                        (cons (@ reverse (cons 1 nil))
-                              (cons (@ reverse (cons 2 (cons 3 nil)))
-                                    (cons (@ reverse (cons 4 (cons 5 (cons 6 nil))))
+                  (cons (reverse nil)
+                        (cons (reverse (cons 1 nil))
+                              (cons (reverse (cons 2 (cons 3 nil)))
+                                    (cons (reverse (cons 4 (cons 5 (cons 6 nil))))
                                           nil))))))
              '(cons nil (cons (cons 1 nil) (cons (cons 3 (cons 2 nil)) (cons (cons 6 (cons 5 (cons 4 nil))) nil)))))))    
   '())
@@ -1929,8 +1932,8 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (@ (@ append nil) nil))
+                                            ((append (cdr l1)) l2)))))))
+             ((append nil) nil))
           expr)
       (!-/evalo '() '() expr type val)))
   '(((list _.0)
@@ -1940,8 +1943,8 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (@ (@ append nil) nil)))))
+                                      ((append (cdr l1)) l2)))))))
+       ((append nil) nil)))))
 
 
 (test "!o-if-1"
@@ -1989,7 +1992,7 @@
 (test "let-poly-type-1"
   (run* (q) (!-o '()
                  '(let-poly ((f (lambda (w)
-                                  (@ w w))))
+                                  (w w))))
                     5)
                  q))
   '())
@@ -1997,7 +2000,7 @@
 (test "let-poly-type-2"
   (run* (q) (!-o '()
                  '(let-poly ((f (lambda (w)
-                                  (@ w 3))))
+                                  (w 3))))
                     5)
                  q))
   '(int))
@@ -2019,35 +2022,35 @@
   '())
 
 (test "9"
-  (run* (q) (!-o `() `(@ (lambda (x) x) 3) q))
+  (run* (q) (!-o `() `((lambda (x) x) 3) q))
   '(int))
 
 (test "10"
   (run* (q) (!-o `()
                  `(let-poly ((f (lambda (y) #f)))
-                    (cons (@ f 3) (@ f #f)))
+                    (cons (f 3) (f #f)))
                  q))
   '())
 
 (test "11"
   (run* (q) (!-o `()
                  `(let-poly ((f (lambda (y) y)))
-                    (pair (@ f 3) (@ f #f)))
+                    (pair (f 3) (f #f)))
                  q))
   '((pair int bool)))
 
 (test "12"
   (run* (q) (!-o `()
-                 `(@ (lambda (f)
-                       (pair (@ f 3) (@ f #f)))
+                 `((lambda (f)
+                       (pair (f 3) (f #f)))
                      (lambda (y) y))
                  q))
   '())
 
 (test "13"
   (run* (q) (!-o `()
-                 `(@ (lambda (f)
-                       (pair (@ f 3) (@ f 4)))
+                 `((lambda (f)
+                       (pair (f 3) (f 4)))
                      (lambda (y) y))
                  q))
   '((pair int int)))
@@ -2094,7 +2097,7 @@
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2)))))))
+                                                   ((append (cdr l1)) l2)))))))
                     append)
                  q))
   '((-> (list _.0) (-> (list _.0) (list _.0)))))
@@ -2106,17 +2109,17 @@
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2)))))))
+                                                   ((append (cdr l1)) l2)))))))
                     (let-poly ((rev (lambda (l1)
                                       (if (null? l1)
                                           l1
-                                          (@ (@ append (@ rev (cdr l1))) (cons (car l1) nil))))))
+                                          ((append (rev (cdr l1))) (cons (car l1) nil))))))
                       rev))
                  q))
   '((-> (list _.0) (list _.0))))
 
 (test "22"
-  (run* (q) (!-o `() `(lambda (f) (@ f f)) q))
+  (run* (q) (!-o `() `(lambda (f) (f f)) q))
   '())
 
 (test "23"
@@ -2131,7 +2134,7 @@
 
 (test "25"
   (run 1 (q) (!-o `((x (mono (-> bool bool))) (z (mono bool)))
-                  `(@ x ,q)
+                  `(x ,q)
                   `bool))
   '(#f))
 
@@ -2183,40 +2186,40 @@
 
 (test "31"
   (run* (q) (evalo `()
-                   `(@ (lambda (x) x) 3)
+                   `((lambda (x) x) 3)
                    q))
   '(3))
 
 (test "32"
   (run* (q) (evalo `()
                    `(let-poly ((x (lambda (y) #f)))
-                      (cons (@ x 3) (@ x #f)))
+                      (cons (x 3) (x #f)))
                    q))
   '((cons #f #f)))
 
 (test "33"
   (run* (q) (evalo `()
                    `(let-poly ((f (lambda (y) y)))
-                      (pair (@ f 3) (@ f #f)))
+                      (pair (f 3) (f #f)))
                    q))
   '((pair 3 #f)))
 
 (test "34"
   (run* (q) (evalo `()
                    `(let-poly ((f (lambda (y) y)))
-                      (pair (@ f 3) (@ f #f)))
+                      (pair (f 3) (f #f)))
                    q))
   '((pair 3 #f)))
 
 (test "35"
   (run* (q) (evalo `()
-                   `(@ (lambda (f) (pair (@ f 3) (@ f #f))) (lambda (y) y))
+                   `((lambda (f) (pair (f 3) (f #f))) (lambda (y) y))
                    q))
   '((pair 3 #f)))
 
 (test "36"
   (run* (q) (evalo `()
-                   `(@ (lambda (f) (pair (@ f 3) (@ f 4))) (lambda (y) y))
+                   `((lambda (f) (pair (f 3) (f 4))) (lambda (y) y))
                    q))
   '((pair 3 4)))
 
@@ -2239,8 +2242,8 @@
                                            (if (null? l1)
                                                l2
                                                (cons (car l1)
-                                                     (@ (@ append (cdr l1)) l2)))))))
-                      (@ (@ append nil) nil))
+                                                     ((append (cdr l1)) l2)))))))
+                      ((append nil) nil))
                    q))
   '(nil))
 
@@ -2251,8 +2254,8 @@
                                            (if (null? l1)
                                                l2
                                                (cons (car l1)
-                                                     (@ (@ append (cdr l1)) l2)))))))
-                      (@ (@ append (cons 1 nil)) nil))
+                                                     ((append (cdr l1)) l2)))))))
+                      ((append (cons 1 nil)) nil))
                    q))
   '((cons 1 nil)))
 
@@ -2266,8 +2269,8 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
+                                            ((append (cdr l1)) l2)))))))
+             ((append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
           expr)
       (!-o '() expr type)))
   '(((list int)
@@ -2276,8 +2279,8 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
+                                      ((append (cdr l1)) l2)))))))
+       ((append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
 
 (test "42-value"
   (run* (q)
@@ -2288,8 +2291,8 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
+                                            ((append (cdr l1)) l2)))))))
+             ((append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
           expr)
       (evalo '() expr val)))
   '(((cons 1 (cons 2 (cons 3 (cons 4 (cons 5 nil)))))
@@ -2298,8 +2301,8 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
+                                      ((append (cdr l1)) l2)))))))
+       ((append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
 
 (test "42-type-and-value"
   (run* (q)
@@ -2310,8 +2313,8 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
+                                            ((append (cdr l1)) l2)))))))
+             ((append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
           expr)
       (!-o '() expr type)
       (evalo '() expr val)))
@@ -2322,8 +2325,8 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
+                                      ((append (cdr l1)) l2)))))))
+       ((append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
 
 (test "42-type-and-value-verify"
   (run* (q)
@@ -2334,8 +2337,8 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
+                                            ((append (cdr l1)) l2)))))))
+             ((append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil))))
           expr)
       (== `(list int) type)
       (== `(cons 1 (cons 2 (cons 3 (cons 4 (cons 5 nil))))) val)
@@ -2348,8 +2351,8 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (@ (@ append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
+                                      ((append (cdr l1)) l2)))))))
+       ((append (cons 1 (cons 2 (cons 3 nil)))) (cons 4 (cons 5 nil)))))))
 
 
 
@@ -2362,10 +2365,10 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                            ((append (cdr l1)) l2)))))))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))
           expr)
       (!-o '() expr type)))
@@ -2375,10 +2378,10 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (cons (@ (@ append nil) nil)
-             (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                   (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                      ((append (cdr l1)) l2)))))))
+       (cons ((append nil) nil)
+             (cons ((append (cons 1 nil)) (cons 2 nil))
+                   (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
 
 (test "43-type-with-append"
@@ -2390,11 +2393,11 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
+                                            ((append (cdr l1)) l2)))))))
              (pair append
-                   (cons (@ (@ append nil) nil)
-                         (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                               (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                   (cons ((append nil) nil)
+                         (cons ((append (cons 1 nil)) (cons 2 nil))
+                               (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                      nil)))))
           expr)
       (!-o '() expr type)))
@@ -2405,11 +2408,11 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
+                                      ((append (cdr l1)) l2)))))))
        (pair append
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))))))
 
 (test "43-value"
@@ -2421,10 +2424,10 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                            ((append (cdr l1)) l2)))))))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))
           expr)
       (evalo '() expr val)))
@@ -2437,10 +2440,10 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (cons (@ (@ append nil) nil)
-             (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                   (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                      ((append (cdr l1)) l2)))))))
+       (cons ((append nil) nil)
+             (cons ((append (cons 1 nil)) (cons 2 nil))
+                   (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
 
 (test "43-value-with-append"
@@ -2452,11 +2455,11 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
+                                            ((append (cdr l1)) l2)))))))
              (pair append
-                   (cons (@ (@ append nil) nil)
-                         (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                               (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                   (cons ((append nil) nil)
+                         (cons ((append (cons 1 nil)) (cons 2 nil))
+                               (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                      nil)))))
           expr)
       (evalo '() expr val)))
@@ -2465,24 +2468,24 @@
                       (if (null? l1)
                           l2
                           (cons (car l1)
-                                (@ (@ append (cdr l1)) l2))))
+                                ((append (cdr l1)) l2))))
                     ((append (rec (lambda (l1)
                                     (lambda (l2)
                                       (if (null? l1)
                                           l2
                                           (cons (car l1)
-                                                (@ (@ append (cdr l1)) l2))))))))) 
+                                                ((append (cdr l1)) l2))))))))) 
            (cons nil (cons (cons 1 (cons 2 nil)) (cons (cons 3 (cons 4 (cons 5 (cons 6 nil)))) nil))))
      (let-poly ((append (lambda (l1)
                           (lambda (l2)
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))       
+                                      ((append (cdr l1)) l2)))))))       
        (pair append
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))))))
 
 (test "43-type-and-value"
@@ -2494,10 +2497,10 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                            ((append (cdr l1)) l2)))))))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))
           expr)
       (!-o '() expr type)
@@ -2512,10 +2515,10 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (cons (@ (@ append nil) nil)
-             (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                   (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                      ((append (cdr l1)) l2)))))))
+       (cons ((append nil) nil)
+             (cons ((append (cons 1 nil)) (cons 2 nil))
+                   (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
 
 (test "43-type-and-value-with-append"
@@ -2527,11 +2530,11 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
+                                            ((append (cdr l1)) l2)))))))
              (pair append
-                   (cons (@ (@ append nil) nil)
-                         (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                               (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                   (cons ((append nil) nil)
+                         (cons ((append (cons 1 nil)) (cons 2 nil))
+                               (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                      nil)))))
           expr)
       (!-o '() expr type)
@@ -2543,24 +2546,24 @@
                       (if (null? l1)
                           l2
                           (cons (car l1)
-                                (@ (@ append (cdr l1)) l2))))
+                                ((append (cdr l1)) l2))))
                     ((append (rec (lambda (l1)
                                     (lambda (l2)
                                       (if (null? l1)
                                           l2
                                           (cons (car l1)
-                                                (@ (@ append (cdr l1)) l2))))))))) 
+                                                ((append (cdr l1)) l2))))))))) 
            (cons nil (cons (cons 1 (cons 2 nil)) (cons (cons 3 (cons 4 (cons 5 (cons 6 nil)))) nil))))
      (let-poly ((append (lambda (l1)
                           (lambda (l2)
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
+                                      ((append (cdr l1)) l2)))))))
        (pair append
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))))))
 
 (test "43-type-and-value-verify"
@@ -2572,10 +2575,10 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                            ((append (cdr l1)) l2)))))))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))
           expr)
       (== `(list (list int)) type)
@@ -2596,10 +2599,10 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (cons (@ (@ append nil) nil)
-             (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                   (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                      ((append (cdr l1)) l2)))))))
+       (cons ((append nil) nil)
+             (cons ((append (cons 1 nil)) (cons 2 nil))
+                   (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
 
 (test "43-type-and-value-verify-with-append"
@@ -2611,11 +2614,11 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
+                                            ((append (cdr l1)) l2)))))))
              (pair append
-                   (cons (@ (@ append nil) nil)
-                         (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                               (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                   (cons ((append nil) nil)
+                         (cons ((append (cons 1 nil)) (cons 2 nil))
+                               (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                      nil)))))
           expr)
       (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -2626,13 +2629,13 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2))))
+                                      ((append (cdr l1)) l2))))
                           ((append (rec (lambda (l1)
                                           (lambda (l2)
                                             (if (null? l1)
                                                 l2
                                                 (cons (car l1)
-                                                      (@ (@ append (cdr l1)) l2))))))))) 
+                                                      ((append (cdr l1)) l2))))))))) 
                  (cons nil (cons (cons 1 (cons 2 nil)) (cons (cons 3 (cons 4 (cons 5 (cons 6 nil)))) nil))))
           val)
       (!-o '() expr type)
@@ -2644,24 +2647,24 @@
                       (if (null? l1)
                           l2
                           (cons (car l1)
-                                (@ (@ append (cdr l1)) l2))))
+                                ((append (cdr l1)) l2))))
                     ((append (rec (lambda (l1)
                                     (lambda (l2)
                                       (if (null? l1)
                                           l2
                                           (cons (car l1)
-                                                (@ (@ append (cdr l1)) l2))))))))) 
+                                                ((append (cdr l1)) l2))))))))) 
            (cons nil (cons (cons 1 (cons 2 nil)) (cons (cons 3 (cons 4 (cons 5 (cons 6 nil)))) nil))))
      (let-poly ((append (lambda (l1)
                           (lambda (l2)
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
+                                      ((append (cdr l1)) l2)))))))
        (pair append
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))))))
 
 
@@ -2683,12 +2686,12 @@
                  (if (null? l1)
                      l2
                      (cons ,e
-                           (@ (@ append (cdr l1)) l2)))))
+                           ((append (cdr l1)) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil))))
             expr)
         (== `(list (list int)) type)
@@ -2699,10 +2702,10 @@
                                (if (null? l1)
                                    l2
                                    (cons _.0
-                                         (@ (@ append (cdr l1)) l2)))))))
-          (cons (@ (@ append nil) nil)
-                (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                      (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                         ((append (cdr l1)) l2)))))))
+          (cons ((append nil) nil)
+                (cons ((append (cons 1 nil)) (cons 2 nil))
+                      (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                             nil)))))
        (=/= ((_.0 1)) ((_.0 2)) ((_.0 3)) ((_.0 4)) ((_.0 5)) ((_.0 6))) (num _.0)))))
 
@@ -2722,13 +2725,13 @@
                  (if (null? l1)
                      l2
                      (cons ,e
-                           (@ (@ append (cdr l1)) l2)))))
+                           ((append (cdr l1)) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -2742,11 +2745,11 @@
                                (if (null? l1)
                                    l2
                                    (cons _.0
-                                         (@ (@ append (cdr l1)) l2)))))))
+                                         ((append (cdr l1)) l2)))))))
           (pair append
-                (cons (@ (@ append nil) nil)
-                      (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                            (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                (cons ((append nil) nil)
+                      (cons ((append (cons 1 nil)) (cons 2 nil))
+                            (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                   nil))))))
        (=/= ((_.0 1)) ((_.0 2)) ((_.0 3)) ((_.0 4)) ((_.0 5)) ((_.0 6))) (num _.0)))))
 
@@ -2766,12 +2769,12 @@
                  (if (null? l1)
                      l2
                      (cons ,e
-                           (@ (@ append (cdr l1)) l2)))))
+                           ((append (cdr l1)) l2)))))
             f-body)        
         (== `(let-poly ((append ,f-body))
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil))))
             expr)
         (== `(cons nil
@@ -2789,10 +2792,10 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
-         (cons (@ (@ append nil) nil)
-               (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                     (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                        ((append (cdr l1)) l2)))))))
+         (cons ((append nil) nil)
+               (cons ((append (cons 1 nil)) (cons 2 nil))
+                     (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
 (time
@@ -2811,13 +2814,13 @@
                  (if (null? l1)
                      l2
                      (cons ,e
-                           (@ (@ append (cdr l1)) l2)))))
+                           ((append (cdr l1)) l2)))))
             f-body)        
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (closure . ,clos)
@@ -2832,13 +2835,13 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -2848,11 +2851,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -2871,12 +2874,12 @@
                  (if (null? l1)
                      l2
                      (cons ,e
-                           (@ (@ append (cdr l1)) l2)))))
+                           ((append (cdr l1)) l2)))))
             f-body)        
         (== `(let-poly ((append ,f-body))
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil))))
             expr)
         (== `(list (list int)) type)
@@ -2897,10 +2900,10 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
-         (cons (@ (@ append nil) nil)
-               (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                     (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                        ((append (cdr l1)) l2)))))))
+         (cons ((append nil) nil)
+               (cons ((append (cons 1 nil)) (cons 2 nil))
+                     (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
 (time
@@ -2919,13 +2922,13 @@
                  (if (null? l1)
                      l2
                      (cons ,e
-                           (@ (@ append (cdr l1)) l2)))))
+                           ((append (cdr l1)) l2)))))
             f-body)        
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -2946,13 +2949,13 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -2962,11 +2965,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 
@@ -2988,12 +2991,12 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append (cdr ,e)) l2)))))
+                           ((append (cdr ,e)) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil))))
             expr)
         (== `(list (list int)) type)
@@ -3004,10 +3007,10 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr nil)) l2)))))))
-         (cons (@ (@ append nil) nil)
-               (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                     (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                        ((append (cdr nil)) l2)))))))
+         (cons ((append nil) nil)
+               (cons ((append (cons 1 nil)) (cons 2 nil))
+                     (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
 (time
@@ -3026,12 +3029,12 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append (cdr ,e)) l2)))))
+                           ((append (cdr ,e)) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil))))
             expr)
         (== `(cons nil
@@ -3049,10 +3052,10 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
-         (cons (@ (@ append nil) nil)
-               (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                     (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                        ((append (cdr l1)) l2)))))))
+         (cons ((append nil) nil)
+               (cons ((append (cons 1 nil)) (cons 2 nil))
+                     (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
 (time
@@ -3071,12 +3074,12 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append (cdr ,e)) l2)))))
+                           ((append (cdr ,e)) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil))))
             expr)
         (== `(list (list int)) type)
@@ -3097,10 +3100,10 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
-         (cons (@ (@ append nil) nil)
-               (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                     (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                        ((append (cdr l1)) l2)))))))
+         (cons ((append nil) nil)
+               (cons ((append (cons 1 nil)) (cons 2 nil))
+                     (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
 (test "null?-1"
@@ -3111,11 +3114,11 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append #f) l2)))))))
+                                            ((append #f) l2)))))))
              (pair append
-                   (cons (@ (@ append nil) nil)
-                         (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                               (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                   (cons ((append nil) nil)
+                         (cons ((append (cons 1 nil)) (cons 2 nil))
+                               (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                      nil)))))
           expr)
       (!-o '() expr q)))
@@ -3144,7 +3147,7 @@
     (fresh (expr)
       (== `(let-poly ((f (lambda (l1)
                            (null? l1)))) 
-             (@ f #f))
+             (f #f))
           expr)
       (!-o '() expr q)))
   '())
@@ -3156,7 +3159,7 @@
                            (if (null? l1)
                                3
                                4))))
-             (@ f #f))
+             (f #f))
           expr)
       (!-o '() expr q)))
   '())
@@ -3169,7 +3172,7 @@
                              (if (null? l1)
                                  3
                                  4)))))
-             (@ f #f))
+             (f #f))
           expr)
       (!-o '() expr q)))
   '())
@@ -3182,7 +3185,7 @@
                              (if (null? l1)
                                  3
                                  4)))))
-             (@ f (cons 1 nil)))
+             (f (cons 1 nil)))
           expr)
       (!-o '() expr q)))
   '((-> _.0 int)))
@@ -3203,12 +3206,12 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append ,e) l2)))))
+                           ((append ,e) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil))))
             expr)
         (== `(list (list int)) type)
@@ -3218,10 +3221,10 @@
                             (lambda (l2)
                               (if (null? l1)
                                   l2
-                                  (cons (car l1) (@ (@ append nil) l2)))))))
-         (cons (@ (@ append nil) nil)
-               (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                     (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                  (cons (car l1) ((append nil) l2)))))))
+         (cons ((append nil) nil)
+               (cons ((append (cons 1 nil)) (cons 2 nil))
+                     (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
 (time
@@ -3240,13 +3243,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append ,e) l2)))))
+                           ((append ,e) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -3260,11 +3263,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append nil) l2)))))))
+                                        ((append nil) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -3283,12 +3286,12 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append ,e) l2)))))
+                           ((append ,e) l2)))))
             f-body)        
         (== `(let-poly ((append ,f-body))
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil))))
             expr)
         (== `(cons nil
@@ -3306,10 +3309,10 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
-         (cons (@ (@ append nil) nil)
-               (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                     (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                        ((append (cdr l1)) l2)))))))
+         (cons ((append nil) nil)
+               (cons ((append (cons 1 nil)) (cons 2 nil))
+                     (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
 (time
@@ -3328,12 +3331,12 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append ,e) l2)))))
+                           ((append ,e) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil))))
             expr)
         (== `(list (list int)) type)
@@ -3354,10 +3357,10 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
-         (cons (@ (@ append nil) nil)
-               (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                     (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                        ((append (cdr l1)) l2)))))))
+         (cons ((append nil) nil)
+               (cons ((append (cons 1 nil)) (cons 2 nil))
+                     (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                            nil))))))))
 
 (time
@@ -3376,13 +3379,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append ,e) l2)))))
+                           ((append ,e) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (closure . ,clos)
@@ -3397,13 +3400,13 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -3413,11 +3416,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -3436,13 +3439,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append ,e) l2)))))
+                           ((append ,e) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -3463,13 +3466,13 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -3479,11 +3482,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -3503,13 +3506,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append ,e) l2)))))
+                           ((append ,e) l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -3531,13 +3534,13 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -3547,11 +3550,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (printf "**** commenting out append-value-synthesis-with-append-d test, which isn't returning\n")
@@ -3570,7 +3573,7 @@
 
         #|
         ;; uncommenting this == fills in the hole, and shows the test is consistent
-        (== `(@ append (cdr l1)) e)
+        (== `(append (cdr l1)) e)
         |#
         
         (== `(lambda (l1)
@@ -3578,13 +3581,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e l2)))))
+                           (,e l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (closure . ,clos)
@@ -3599,13 +3602,13 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -3615,11 +3618,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 |#
 
@@ -3639,13 +3642,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e l2)))))
+                           (,e l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -3666,13 +3669,13 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -3682,11 +3685,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 
@@ -3709,13 +3712,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e l2)))))
+                           (,e l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -3737,13 +3740,13 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -3753,11 +3756,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 |#
 
@@ -3781,13 +3784,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e1 ,e2)))))
+                           (,e1 ,e2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -3808,13 +3811,13 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -3824,11 +3827,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 
@@ -4002,7 +4005,7 @@
       (!-/evalo '()
                 '()
                 '(let-poly ((f (lambda (w)
-                                 (@ w w))))
+                                 (w w))))
                    5)
                 type
                 val)))
@@ -4015,7 +4018,7 @@
       (!-/evalo '()
                 '()
                 '(let-poly ((f (lambda (w)
-                                 (@ w 3))))
+                                 (w 3))))
                    5)
                 type
                 val)))
@@ -4038,7 +4041,7 @@
   (run* (q)
     (fresh (expr type val)
       (== (list type val) q)
-      (== `(@ (lambda (w) w)
+      (== `((lambda (w) w)
               3)
           expr)      
       (!-/evalo '()
@@ -4052,7 +4055,7 @@
   (run* (q)
     (fresh (expr type val)
       (== (list type val) q)
-      (== `(@ (lambda (w) w)
+      (== `((lambda (w) w)
               (cons 1 nil))
           expr)
       (!-/evalo '()
@@ -4066,8 +4069,8 @@
   (run* (q)
     (fresh (expr type val)
       (== (list type val) q)
-      (== `(@ (lambda (f)
-                (@ f (cons 1 nil)))
+      (== `((lambda (f)
+                (f (cons 1 nil)))
               (lambda (l1)
                 (lambda (l2)
                   (if (null? l1)
@@ -4093,7 +4096,7 @@
                              (if (null? l1)
                                  3
                                  4)))))
-             (@ f (cons 1 nil)))
+             (f (cons 1 nil)))
           expr)      
       (!-/evalo '()
                 '()
@@ -4125,7 +4128,7 @@
                                  (if (null? l)
                                      nil
                                      (cons (car l)
-                                           (@ rebuild (cdr l)))))))
+                                           (rebuild (cdr l)))))))
              rebuild)
           expr)
       (!-/evalo '() '() expr type val)))
@@ -4134,23 +4137,23 @@
               (if (null? l)
                   nil
                   (cons (car l)
-                        (@ rebuild (cdr l))))
+                        (rebuild (cdr l))))
               ((rebuild (poly ((rebuild (mono (-> (list _.0) (list _.0)))))
                               (lambda (l)
                                 (if (null? l)
                                     nil
                                     (cons (car l)
-                                          (@ rebuild (cdr l))))))))
+                                          (rebuild (cdr l))))))))
               ((rebuild (rec (lambda (l)
                                (if (null? l)
                                    nil
                                    (cons (car l)
-                                         (@ rebuild (cdr l)))))))))
+                                         (rebuild (cdr l)))))))))
      (let-poly ((rebuild (lambda (l)
                            (if (null? l)
                                nil
                                (cons (car l)
-                                     (@ rebuild (cdr l)))))))
+                                     (rebuild (cdr l)))))))
        rebuild))))
 
 (test "!-/evalo-rebuild-2"
@@ -4161,8 +4164,8 @@
                                  (if (null? l)
                                      nil
                                      (cons (car l)
-                                           (@ rebuild (cdr l)))))))
-             (@ rebuild nil))
+                                           (rebuild (cdr l)))))))
+             (rebuild nil))
           expr)
       (!-/evalo '() '() expr type val)))
   '(((list _.0)
@@ -4171,8 +4174,8 @@
                            (if (null? l)
                                nil
                                (cons (car l)
-                                     (@ rebuild (cdr l)))))))
-       (@ rebuild nil)))))
+                                     (rebuild (cdr l)))))))
+       (rebuild nil)))))
 
 (test "!-/evalo-rebuild-3"
   (run* (q)
@@ -4182,8 +4185,8 @@
                                  (if (null? l)
                                      nil
                                      (cons (car l)
-                                           (@ rebuild (cdr l)))))))
-             (@ rebuild (cons 1 nil)))
+                                           (rebuild (cdr l)))))))
+             (rebuild (cons 1 nil)))
           expr)
       (!-/evalo '() '() expr type val)))
   '(((list int)
@@ -4192,8 +4195,8 @@
                            (if (null? l)
                                nil
                                (cons (car l)
-                                     (@ rebuild (cdr l)))))))
-       (@ rebuild (cons 1 nil))))))
+                                     (rebuild (cdr l)))))))
+       (rebuild (cons 1 nil))))))
 
 (test "!-/evalo-40-simple"
   (run* (q)
@@ -4204,7 +4207,7 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
+                                            ((append (cdr l1)) l2)))))))
              append)
           expr)
       (!-/evalo '() '() expr type val)))
@@ -4214,26 +4217,26 @@
                 (if (null? l1)
                     l2
                     (cons (car l1)
-                          (@ (@ append (cdr l1)) l2))))
+                          ((append (cdr l1)) l2))))
               ((append (poly ((append (mono (-> (list _.0) (-> (list _.0) (list _.0))))))
                              (lambda (l1)
                                (lambda (l2)
                                  (if (null? l1)
                                      l2
                                      (cons (car l1)
-                                           (@ (@ append (cdr l1)) l2))))))))
+                                           ((append (cdr l1)) l2))))))))
               ((append (rec (lambda (l1)
                               (lambda (l2)
                                 (if (null? l1)
                                     l2
                                     (cons (car l1)
-                                          (@ (@ append (cdr l1)) l2)))))))))
+                                          ((append (cdr l1)) l2)))))))))
      (let-poly ((append (lambda (l1)
                           (lambda (l2)
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
+                                      ((append (cdr l1)) l2)))))))
        append))))
 
 (test "!-/evalo-41-simple"
@@ -4245,8 +4248,8 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (@ append nil))
+                                            ((append (cdr l1)) l2)))))))
+             (append nil))
           expr)
       (!-/evalo '() '() expr type val)))
   '(((-> (list _.0) (list _.0))
@@ -4254,7 +4257,7 @@
               (if (null? l1)
                   l2
                   (cons (car l1)
-                        (@ (@ append (cdr l1)) l2)))
+                        ((append (cdr l1)) l2)))
               ((l1 (mono (list _.0)))
                (append (poly ((append (mono (-> (list _.0) (-> (list _.0) (list _.0))))))
                              (lambda (l1)
@@ -4262,21 +4265,21 @@
                                  (if (null? l1)
                                      l2
                                      (cons (car l1)
-                                           (@ (@ append (cdr l1)) l2))))))))
+                                           ((append (cdr l1)) l2))))))))
               ((l1 (val nil))
                (append (rec (lambda (l1)
                               (lambda (l2)
                                 (if (null? l1)
                                     l2
                                     (cons (car l1)
-                                          (@ (@ append (cdr l1)) l2)))))))))
+                                          ((append (cdr l1)) l2)))))))))
      (let-poly ((append (lambda (l1)
                           (lambda (l2)
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (@ append nil)))))
+                                      ((append (cdr l1)) l2)))))))
+       (append nil)))))
 
 (test "!-/evalo-42-simple"
   (run* (q)
@@ -4287,8 +4290,8 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (@ (@ append nil) nil))
+                                            ((append (cdr l1)) l2)))))))
+             ((append nil) nil))
           expr)
       (!-/evalo '() '() expr type val)))
   '(((list _.0)
@@ -4298,8 +4301,8 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (@ (@ append nil) nil)))))
+                                      ((append (cdr l1)) l2)))))))
+       ((append nil) nil)))))
 
 (test "!-/evalo-43-type-and-value"
   (run* (q)
@@ -4310,10 +4313,10 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                            ((append (cdr l1)) l2)))))))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))
           expr)
       (!-/evalo '() '() expr type val)))
@@ -4327,10 +4330,10 @@
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
-       (cons (@ (@ append nil) nil)
-             (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                   (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                                      ((append (cdr l1)) l2)))))))
+       (cons ((append nil) nil)
+             (cons ((append (cons 1 nil)) (cons 2 nil))
+                   (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                          nil)))))))
 
 (test "!-/evalo-43-type-and-value-with-append"
@@ -4342,11 +4345,11 @@
                                   (if (null? l1)
                                       l2
                                       (cons (car l1)
-                                            (@ (@ append (cdr l1)) l2)))))))
+                                            ((append (cdr l1)) l2)))))))
              (pair append
-                   (cons (@ (@ append nil) nil)
-                         (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                               (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                   (cons ((append nil) nil)
+                         (cons ((append (cons 1 nil)) (cons 2 nil))
+                               (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                      nil)))))
           expr)
       (!-/evalo '() '() expr type val)))
@@ -4357,31 +4360,31 @@
                       (if (null? l1)
                           l2
                           (cons (car l1)
-                                (@ (@ append (cdr l1)) l2))))
+                                ((append (cdr l1)) l2))))
                     ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                    (lambda (l1)
                                      (lambda (l2)
                                        (if (null? l1)
                                            l2
                                            (cons (car l1)
-                                                 (@ (@ append (cdr l1)) l2))))))))
+                                                 ((append (cdr l1)) l2))))))))
                     ((append (rec (lambda (l1)
                                     (lambda (l2)
                                       (if (null? l1)
                                           l2
                                           (cons (car l1)
-                                                (@ (@ append (cdr l1)) l2))))))))) 
+                                                ((append (cdr l1)) l2))))))))) 
            (cons nil (cons (cons 1 (cons 2 nil)) (cons (cons 3 (cons 4 (cons 5 (cons 6 nil)))) nil))))
      (let-poly ((append (lambda (l1)
                           (lambda (l2)
                             (if (null? l1)
                                 l2
                                 (cons (car l1)
-                                      (@ (@ append (cdr l1)) l2)))))))
+                                      ((append (cdr l1)) l2)))))))
        (pair append
-             (cons (@ (@ append nil) nil)
-                   (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                         (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+             (cons ((append nil) nil)
+                   (cons ((append (cons 1 nil)) (cons 2 nil))
+                         (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                nil))))))))
 
 
@@ -4401,13 +4404,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ (@ append ,e) l2)))))
+                           ((append ,e) l2)))))
             f-body)        
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -4427,20 +4430,20 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                      (lambda (l1)
                                        (lambda (l2)
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2))))))))
+                                                   ((append (cdr l1)) l2))))))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -4450,11 +4453,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -4473,13 +4476,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e1 l2)))))
+                           (,e1 l2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -4499,20 +4502,20 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                      (lambda (l1)
                                        (lambda (l2)
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2))))))))
+                                                   ((append (cdr l1)) l2))))))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -4522,11 +4525,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -4549,13 +4552,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e1 ,e2)))))
+                           (,e1 ,e2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -4575,20 +4578,20 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                      (lambda (l1)
                                        (lambda (l2)
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2))))))))
+                                                   ((append (cdr l1)) l2))))))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -4598,11 +4601,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -4625,13 +4628,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e1 ,e2)))))
+                           (,e1 ,e2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -4651,20 +4654,20 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                      (lambda (l1)
                                        (lambda (l2)
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2))))))))
+                                                   ((append (cdr l1)) l2))))))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -4674,11 +4677,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -4701,13 +4704,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e1 ,e2)))))
+                           (,e1 ,e2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -4727,20 +4730,20 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                      (lambda (l1)
                                        (lambda (l2)
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2))))))))
+                                                   ((append (cdr l1)) l2))))))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -4750,11 +4753,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -4777,13 +4780,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e1 ,e2)))))
+                           (,e1 ,e2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -4803,20 +4806,20 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                      (lambda (l1)
                                        (lambda (l2)
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2))))))))
+                                                   ((append (cdr l1)) l2))))))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -4826,11 +4829,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (time
@@ -4853,13 +4856,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e1 ,e2)))))
+                           (,e1 ,e2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -4879,20 +4882,20 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                      (lambda (l1)
                                        (lambda (l2)
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2))))))))
+                                                   ((append (cdr l1)) l2))))))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -4902,11 +4905,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 
 (printf "**** commenting out append-!-/evalo-synthesis-with-append-e-without-hint test, which isn't returning\n")
@@ -4927,13 +4930,13 @@
                  (if (null? l1)
                      l2
                      (cons (car l1)
-                           (@ ,e1 ,e2)))))
+                           (,e1 ,e2)))))
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -4953,20 +4956,20 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                      (lambda (l1)
                                        (lambda (l2)
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2))))))))
+                                                   ((append (cdr l1)) l2))))))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -4976,11 +4979,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 |#
 
@@ -5007,9 +5010,9 @@
             f-body)
         (== `(let-poly ((append ,f-body))
                (pair append
-                     (cons (@ (@ append nil) nil)
-                           (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                                 (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+                     (cons ((append nil) nil)
+                           (cons ((append (cons 1 nil)) (cons 2 nil))
+                                 (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (-> (list int) (list int)))
@@ -5029,20 +5032,20 @@
                         (if (null? l1)
                             l2
                             (cons (car l1)
-                                  (@ (@ append (cdr l1)) l2))))
+                                  ((append (cdr l1)) l2))))
                       ((append (poly ((append (mono (-> (list int) (-> (list int) (list int))))))
                                      (lambda (l1)
                                        (lambda (l2)
                                          (if (null? l1)
                                              l2
                                              (cons (car l1)
-                                                   (@ (@ append (cdr l1)) l2))))))))
+                                                   ((append (cdr l1)) l2))))))))
                       ((append (rec (lambda (l1)
                                       (lambda (l2)
                                         (if (null? l1)
                                             l2
                                             (cons (car l1)
-                                                  (@ (@ append (cdr l1)) l2)))))))))
+                                                  ((append (cdr l1)) l2)))))))))
              (cons nil
                    (cons (cons 1 (cons 2 nil))
                          (cons (cons 3 (cons 4 (cons 5 (cons 6 nil))))
@@ -5052,11 +5055,11 @@
                               (if (null? l1)
                                   l2
                                   (cons (car l1)
-                                        (@ (@ append (cdr l1)) l2)))))))
+                                        ((append (cdr l1)) l2)))))))
          (pair append
-               (cons (@ (@ append nil) nil)
-                     (cons (@ (@ append (cons 1 nil)) (cons 2 nil))
-                           (cons (@ (@ append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
+               (cons ((append nil) nil)
+                     (cons ((append (cons 1 nil)) (cons 2 nil))
+                           (cons ((append (cons 3 (cons 4 nil))) (cons 5 (cons 6 nil)))
                                  nil)))))))))
 |#
 
@@ -5079,13 +5082,13 @@
                      nil
                      (cons (car l)
                            (cons (car l)
-                                 (@ stutter (cdr l))))))
+                                 (stutter (cdr l))))))
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (!-o '() expr type)))
@@ -5096,11 +5099,11 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
+                                             (stutter (cdr l))))))))
          (pair stutter
-               (cons (@ stutter nil)
-                     (cons (@ stutter (cons 0 nil))
-                           (cons (@ stutter (cons 1 (cons 0 nil)))
+               (cons (stutter nil)
+                     (cons (stutter (cons 0 nil))
+                           (cons (stutter (cons 1 (cons 0 nil)))
                                  nil)))))))))
 
 (time
@@ -5119,13 +5122,13 @@
                      nil
                      (cons (car l)
                            (cons (car l)
-                                 (@ stutter (cdr l))))))
+                                 (stutter (cdr l))))))
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (evalo '() expr val)))
@@ -5134,19 +5137,19 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
                                nil))))
-       (let-poly ((stutter (lambda (l) (if (null? l) nil (cons (car l) (cons (car l) (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil) (cons (@ stutter (cons 0 nil)) (cons (@ stutter (cons 1 (cons 0 nil))) nil)))))))))
+       (let-poly ((stutter (lambda (l) (if (null? l) nil (cons (car l) (cons (car l) (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil) (cons (stutter (cons 0 nil)) (cons (stutter (cons 1 (cons 0 nil))) nil)))))))))
 
 (time
   (test "stutter-!-o-and-evalo-with-stutter-1"
@@ -5164,13 +5167,13 @@
                      nil
                      (cons (car l)
                            (cons (car l)
-                                 (@ stutter (cdr l))))))
+                                 (stutter (cdr l))))))
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (!-o '() expr type)
@@ -5182,13 +5185,13 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
@@ -5198,10 +5201,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 0 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
 
 (time
@@ -5220,13 +5223,13 @@
                      nil
                      (cons (car l)
                            (cons (car l)
-                                 (@ stutter (cdr l))))))
+                                 (stutter (cdr l))))))
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (!-/evalo '() '() expr type val)))
@@ -5237,20 +5240,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
@@ -5260,10 +5263,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 0 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
 
 (time
@@ -5282,13 +5285,13 @@
                      nil
                      (cons (car l)
                            (cons (car l)
-                                 (@ stutter ,e)))))
+                                 (stutter ,e)))))
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (== `(pair (closure . ,clos)
@@ -5303,19 +5306,19 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
                                nil))))
-       (let-poly ((stutter (lambda (l) (if (null? l) nil (cons (car l) (cons (car l) (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil) (cons (@ stutter (cons 0 nil)) (cons (@ stutter (cons 1 (cons 0 nil))) nil)))))))))
+       (let-poly ((stutter (lambda (l) (if (null? l) nil (cons (car l) (cons (car l) (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil) (cons (stutter (cons 0 nil)) (cons (stutter (cons 1 (cons 0 nil))) nil)))))))))
 
 (time
   (test "stutter-!-o-and-evalo-with-synthesis-stutter-1"
@@ -5333,13 +5336,13 @@
                      nil
                      (cons (car l)
                            (cons (car l)
-                                 (@ stutter ,e)))))
+                                 (stutter ,e)))))
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -5360,13 +5363,13 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
@@ -5376,10 +5379,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 0 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
 
 (time
@@ -5398,13 +5401,13 @@
                      nil
                      (cons (car l)
                            (cons (car l)
-                                 (@ stutter ,e)))))
+                                 (stutter ,e)))))
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -5424,20 +5427,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
@@ -5447,10 +5450,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 0 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
 
 
@@ -5476,9 +5479,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (== `(pair (closure . ,clos)
@@ -5493,19 +5496,19 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
                                nil))))
-       (let-poly ((stutter (lambda (l) (if (null? l) nil (cons (car l) (cons (car l) (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil) (cons (@ stutter (cons 0 nil)) (cons (@ stutter (cons 1 (cons 0 nil))) nil)))))))))
+       (let-poly ((stutter (lambda (l) (if (null? l) nil (cons (car l) (cons (car l) (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil) (cons (stutter (cons 0 nil)) (cons (stutter (cons 1 (cons 0 nil))) nil)))))))))
 
 (time
   (test "stutter-!-o-and-evalo-with-synthesis-stutter-2"
@@ -5527,9 +5530,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -5550,13 +5553,13 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
@@ -5566,10 +5569,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 0 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
 
 (time
@@ -5593,9 +5596,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -5615,20 +5618,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -5638,10 +5641,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (time
@@ -5664,9 +5667,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -5686,20 +5689,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
@@ -5709,10 +5712,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 0 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
 
 (time
@@ -5736,9 +5739,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -5758,20 +5761,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -5781,10 +5784,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (time
@@ -5808,9 +5811,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -5830,20 +5833,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -5853,10 +5856,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (time
@@ -5880,9 +5883,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -5902,20 +5905,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -5925,10 +5928,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 
@@ -5953,9 +5956,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -5975,20 +5978,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -5998,10 +6001,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (printf "!!!!   none of the following tests seem to come back in a reasonable time...\n")
@@ -6029,9 +6032,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -6051,20 +6054,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -6074,10 +6077,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (time
@@ -6101,9 +6104,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -6123,20 +6126,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -6146,10 +6149,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (time
@@ -6173,9 +6176,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -6195,20 +6198,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -6218,10 +6221,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (time
@@ -6245,9 +6248,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -6267,20 +6270,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -6290,10 +6293,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (time
@@ -6317,9 +6320,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -6339,20 +6342,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -6362,10 +6365,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (time
@@ -6388,9 +6391,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -6410,20 +6413,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
@@ -6433,10 +6436,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 0 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
 
 (time
@@ -6460,9 +6463,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 2 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 2 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -6482,20 +6485,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 2 (cons 2 nil))))
@@ -6505,10 +6508,10 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 2 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 2 nil)))
                                          nil)))))))))
 
 (time
@@ -6531,9 +6534,9 @@
             f-body)
         (== `(let-poly ((stutter ,f-body))
                (pair stutter
-                     (cons (@ stutter nil)
-                           (cons (@ stutter (cons 0 nil))
-                                 (cons (@ stutter (cons 1 (cons 0 nil)))
+                     (cons (stutter nil)
+                           (cons (stutter (cons 0 nil))
+                                 (cons (stutter (cons 1 (cons 0 nil)))
                                        nil)))))
             expr)
         (== `(pair (-> (list int) (list int))
@@ -6553,20 +6556,20 @@
                           nil
                           (cons (car l)
                                 (cons (car l)
-                                      (@ stutter (cdr l)))))
+                                      (stutter (cdr l)))))
                       ((stutter (poly ((stutter (mono (-> (list int) (list int)))))
                                       (lambda (l)
                                         (if (null? l)
                                             nil
                                             (cons (car l)
                                                   (cons (car l)
-                                                        (@ stutter (cdr l)))))))))
+                                                        (stutter (cdr l)))))))))
                       ((stutter (rec (lambda (l)
                                        (if (null? l)
                                            nil
                                            (cons (car l)
                                                  (cons (car l)
-                                                       (@ stutter (cdr l))))))))))
+                                                       (stutter (cdr l))))))))))
              (cons nil
                    (cons (cons 0 (cons 0 nil))
                          (cons (cons 1 (cons 1 (cons 0 (cons 0 nil))))
@@ -6576,9 +6579,51 @@
                                  nil
                                  (cons (car l)
                                        (cons (car l)
-                                             (@ stutter (cdr l))))))))
-         (pair stutter (cons (@ stutter nil)
-                             (cons (@ stutter (cons 0 nil))
-                                   (cons (@ stutter (cons 1 (cons 0 nil)))
+                                             (stutter (cdr l))))))))
+         (pair stutter (cons (stutter nil)
+                             (cons (stutter (cons 0 nil))
+                                   (cons (stutter (cons 1 (cons 0 nil)))
                                          nil)))))))))
 
+;;; interesting examples
+
+;; fail due to self-application
+(run* (expr val)
+  (fresh (e)
+    (== `((lambda (x) 3) (lambda (y) (y y))) expr)
+    (!-/evalo '()
+              '()
+              expr
+              'int
+              val)))
+
+(run 1000 (expr val)
+  (fresh (e)
+    (== `((lambda (x) 3) ,e) expr)
+    (!-/evalo '()
+              '()
+              expr
+              'int
+              val)))
+
+(run 100 (expr type val)
+  (fresh (e)
+    (== `((lambda (x) (cons x (cons 3 nil))) ,e) expr)
+    (!-/evalo '()
+              '()
+              expr
+              type
+              val)))
+
+;; diverges!
+#;(run 1 (expr type val)
+  (fresh (e)
+    (== `((lambda (x) 3)
+          (let-poly ((f (lambda (x) (f x))))
+            (f 4)))
+        expr)
+    (!-/evalo '()
+              '()
+              expr
+              type
+              val)))
