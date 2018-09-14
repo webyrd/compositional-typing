@@ -668,8 +668,7 @@
          (symbolo x)
          (!-/evalo-lazy-nocont-aux gamma env e1
                                  `(-> ,t ,type)
-                                 `(closure (,x) ,body ,gamma^ ,env^)
-                                 succeed)
+                                 `(closure (,x) ,body ,gamma^ ,env^))
          (!-/evalo-lazy-nocont-aux gamma env e2 t arg)
          (!-/evalo-lazy-nocont-aux `((,x (mono ,t)) . ,gamma^) `((,x (val ,arg)) . ,env^) body type val))]
       [(fresh (e1 e2 e3 t2 t3 x y body arg2 arg3 gamma^ env^ some-gamma)
@@ -693,15 +692,6 @@
         (!-o gamma expr type)
         )
       ))
-
-
-
-
-
-
-
-
-
 
 
 ; 値から逆算的に決めているから、if 文は evaluator でも推論しやすい
@@ -1456,6 +1446,43 @@
                                         (cons (cons (cons 1 nil)
                                                     (cons (cons 2 nil) (cons (cons 3 nil) nil)))
                                               nil))))))
+   `((lambda (f)
+       (lambda (l)
+         (if (null? l)
+             nil
+             (cons (f (car l)) (map f (cdr l)))))))))
+
+(time
+ (test "map-!-/evalo-lazy-nocont-uncurried-18"
+   (run 1 (prog)
+     (fresh (q r s k l)
+       (absento 1 prog)
+       (absento 2 prog)
+       (absento 3 prog)
+       (absento 4 prog)
+       (absento 5 prog)
+       (absento 6 prog)
+       (== `(lambda (f)
+              (lambda (l)
+                (if (null? l)
+                    nil
+                    (cons (f ,q) (map ,r (cdr l))))))
+           prog)
+       (!-/evalo-lazy-nocont '() '() 
+                             `(let-poly ((map ,prog))
+                                (cons (map (lambda (k) (cons k nil))
+                                           nil)
+                                      (cons (map (lambda (k) (cons 1 nil))
+                                                 (cons 3 nil))
+                                            (cons (map (lambda (k) (cons k nil))
+                                                       (cons 1 (cons 2 (cons 3 nil))))
+                                                  nil))))
+                             `(list (list (list int)))
+                             `(cons nil
+                                    (cons (cons (cons 1 nil) nil)
+                                          (cons (cons (cons 1 nil)
+                                                      (cons (cons 2 nil) (cons (cons 3 nil) nil)))
+                                                nil))))))
    `((lambda (f)
        (lambda (l)
          (if (null? l)
